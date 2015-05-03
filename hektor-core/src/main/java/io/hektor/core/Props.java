@@ -21,9 +21,13 @@ public interface Props {
 
     List<Object> arguments();
 
+    Router router();
+
     static class Builder {
 
         private List<Object> args;
+
+        private Router router;
 
         private final Class<? extends Actor> clazz;
 
@@ -39,10 +43,14 @@ public interface Props {
             return this;
         }
 
+        public Builder withRouter(final Router router) {
+            this.router = router;
+            return this;
+        }
 
         public Props build() throws NoSuchMethodException {
             final Constructor<? extends Actor> constructor = ReflectionHelper.findConstructor(clazz, args);
-            return new DefaultProps(clazz, constructor, args);
+            return new DefaultProps(clazz, constructor, args, router);
         }
 
         private static class DefaultProps implements Props {
@@ -50,13 +58,16 @@ public interface Props {
             private final Class<? extends Actor> clazz;
             private final Constructor<? extends Actor> constructor;
             private final List<Object> args;
+            private final Router router;
 
             private DefaultProps(final Class<? extends Actor> clazz,
                                  final Constructor<? extends Actor> constructor,
-                                 final List<Object> args) {
+                                 final List<Object> args,
+                                 final Router router) {
                 this.clazz = clazz;
                 this.constructor = constructor;
                 this.args = args;
+                this.router = router;
             }
 
             @Override
@@ -72,6 +83,11 @@ public interface Props {
             @Override
             public List<Object> arguments() {
                 return args;
+            }
+
+            @Override
+            public Router router() {
+                return null;
             }
 
         }

@@ -21,8 +21,6 @@ public class DummyActor implements Actor {
     public DummyActor(final CountDownLatch latch, final Boolean doReply) {
         this.latch = latch;
         this.doReply = doReply;
-        System.err.println("Latch: " + latch);
-        System.err.println("DoReply: " + doReply);
     }
 
     @Override
@@ -32,8 +30,6 @@ public class DummyActor implements Actor {
         }
 
         if (doReply) {
-            System.err.println(context.sender().path());
-            System.err.println(context.self().path());
             context.sender().tell(msg + " back at you!", context.self());
         }
 

@@ -2,6 +2,7 @@ package io.hektor.core;
 
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -41,5 +42,49 @@ public class HektorTest extends HektorTestBase {
         ref2.tell("hello no 2", ref1);
         latch1.await();
         latch2.await();
+    }
+
+    @Test(timeout = 500)
+    public void testActorWithRouter() throws Exception {
+        final int count = 4;
+        final CountDownLatch latches[] = new CountDownLatch[count];
+        final Router router = null;
+
+        Hektor.RouterBuilder routerBuilder = defaultHektor.routerWithName("hello-router");
+        routerBuilder.withRoutingLogic(new SimpleRoutingLogic());
+
+        for (int i = 0; i < count; ++i) {
+            latches[i] = new CountDownLatch(1);
+            final Props props = Props.forActor(DummyActor.class).withConstructorArg(latches[i]).build();
+            final ActorRef ref = defaultHektor.actorOf(props, "hello-" + i);
+            routerBuilder.withRoutee(ref);
+        }
+
+        final ActorRef routerRef = routerBuilder.build();
+        routerRef.tellAnonymously(1);
+        latches[1].await();
+
+        routerRef.tellAnonymously(0);
+        latches[0].await();
+
+        routerRef.tellAnonymously(3);
+        latches[3].await();
+
+        routerRef.tellAnonymously(2);
+        latches[2].await();
+    }
+
+    /**
+     * Super simple routing logic that assumes that the message is an Integer and
+     * uses it as an index into the list of routees when selcting which actor
+     * should get the message.
+     */
+    private static class SimpleRoutingLogic implements RoutingLogic {
+
+        @Override
+        public ActorRef select(Object msg, List<ActorRef> routees) {
+            Integer index = (Integer)msg;
+            return routees.get(index);
+        }
     }
 }

@@ -29,6 +29,18 @@ public interface Hektor {
      */
     ActorRef actorOf(Props props, String name);
 
+    RouterBuilder routerWithName(String name);
+
+    interface RouterBuilder {
+
+        ActorRef build();
+
+        RouterBuilder withRoutee(ActorRef actor);
+
+        RouterBuilder withRoutingLogic(RoutingLogic logic);
+
+    }
+
     class Builder {
 
         private final String name;
