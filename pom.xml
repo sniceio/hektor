@@ -48,6 +48,7 @@
     <mockito.version>1.9.5</mockito.version> 
     <junit.version>4.11</junit.version> 
     <jackson.version>2.5.3</jackson.version>
+    <metrics.version>3.1.0</metrics.version>
   </properties>
 
   <modules>
@@ -63,6 +64,14 @@
      <version>${sl4j.version}</version>
      <scope>provided</scope>
    </dependency>
+
+    <!-- For meassuring everything -->
+    <dependency>
+        <groupId>io.dropwizard.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+        <version>${metrics.version}</version>
+        <scope>compile</scope>
+    </dependency>
 
     <!-- For dealing with everything json -->
     <dependency>

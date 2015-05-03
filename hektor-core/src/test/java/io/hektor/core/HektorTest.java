@@ -1,10 +1,8 @@
 package io.hektor.core;
 
-import io.hektor.config.HektorConfiguration;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Basic tests to configure and start Hektor and send some basic messages through.
@@ -13,24 +11,35 @@ import static org.junit.Assert.*;
  */
 public class HektorTest extends HektorTestBase {
 
-    @Test
-    public void testBuildHektor() throws Exception {
-        final HektorConfiguration config = loadConfig("hektor_config.yaml");
-        final Hektor hektor = Hektor.withName("hello").withConfiguration(config).build();
-        assertThat(hektor, not((Hektor) null));
-
-        Props props = Props.forActor(DummyActor.class).build();
-        final ActorRef ref = hektor.actorOf(props, "hello");
-        final ActorRef ref2 = hektor.actorOf(props, "hello2");
-        final ActorRef ref3 = hektor.actorOf(props, "hello3");
-        assertThat(ref, not((ActorRef) null));
-        ref.tell("hello world");
-        ref2.tell("hello to the 2nd one");
-        ref3.tell("hello to the 3rd one");
-        ref3.tell("hello again no 3");
-        ref.tell("hello again");
-        Thread.sleep(200);
+    /**
+     * Make sure that we can start the basic system and send
+     * a single message through. We are using a countdown latch
+     * and if that one doesn't complete within 500ms the test
+     * will fail.
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 500)
+    public void testSimpleSendMessage() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Props props = Props.forActor(DummyActor.class).withConstructorArg(latch).build();
+        final ActorRef ref = defaultHektor.actorOf(props, "hello");
+        ref.tellAnonymously("hello world");
+        latch.await();
     }
 
+    @Test(timeout = 500)
+    public void testSimpleReplyToMessage() throws Exception {
+        final CountDownLatch latch1 = new CountDownLatch(1);
+        final CountDownLatch latch2 = new CountDownLatch(1);
+        final Props props1 = Props.forActor(DummyActor.class).withConstructorArg(latch1).build();
+        final ActorRef ref1 = defaultHektor.actorOf(props1, "first");
 
+        final Props props2 = Props.forActor(DummyActor.class).withConstructorArg(latch2).withConstructorArg(true).build();
+        final ActorRef ref2 = defaultHektor.actorOf(props2, "second");
+
+        ref2.tell("hello no 2", ref1);
+        latch1.await();
+        latch2.await();
+    }
 }

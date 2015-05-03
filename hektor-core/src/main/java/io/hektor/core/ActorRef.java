@@ -14,5 +14,10 @@ public interface ActorRef {
 
     void tell(Object msg, ActorRef sender);
 
-    void tell(Object msg);
+    /**
+     * Send a message to the actor but specify no sender.
+     *
+     * @param msg
+     */
+    void tellAnonymously(Object msg);
 }

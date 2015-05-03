@@ -10,4 +10,8 @@ public interface ActorContext {
     void unstash();
 
     ActorRef actorOf(Props props);
+
+    ActorRef sender();
+
+    ActorRef self();
 }

@@ -1,31 +1,42 @@
 package io.hektor.core;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * @author jonas@jonasborjesson.com
  */
 public class DummyActor implements Actor {
 
+    private final CountDownLatch latch;
+    private final boolean doReply;
+
     public DummyActor() {
+        this(null);
+    }
 
+    public DummyActor(final CountDownLatch latch) {
+        this(latch, false);
+    }
+
+    public DummyActor(final CountDownLatch latch, final Boolean doReply) {
+        this.latch = latch;
+        this.doReply = doReply;
+        System.err.println("Latch: " + latch);
+        System.err.println("DoReply: " + doReply);
     }
 
     @Override
-    public ActorRef self() {
-        return null;
-    }
+    public void onReceive(final ActorContext context, final Object msg) {
+        if (latch != null) {
+            latch.countDown();;
+        }
 
-    @Override
-    public ActorRef sender() {
-        return null;
-    }
+        if (doReply) {
+            System.err.println(context.sender().path());
+            System.err.println(context.self().path());
+            context.sender().tell(msg + " back at you!", context.self());
+        }
 
-    @Override
-    public ActorContext context() {
-        return null;
-    }
-
-    @Override
-    public void onReceive(final Object msg) {
-        System.err.println("[" + Thread.currentThread().getName() + "] " + msg);
+        System.out.println("[" + Thread.currentThread().getName() + "] " + msg);
     }
 }

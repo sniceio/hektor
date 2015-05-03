@@ -32,7 +32,7 @@ public class DefaultActorRef implements ActorRef {
     }
 
     @Override
-    public void tell(Object msg) {
+    public void tellAnonymously(final Object msg) {
         dispatcher.dispatch(null, this, msg);
     }
 }
