@@ -7,6 +7,7 @@ import org.junit.Before;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.CountDownLatch;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.*;
@@ -20,9 +21,19 @@ public class HektorTestBase {
 
     protected Hektor defaultHektor;
 
+    /**
+     * We use latches all the time so let's create a few fresh
+     * ones automatically for every new test run.
+     */
+    protected CountDownLatch defaultLatch1;
+
+    protected CountDownLatch defaultLatch2;
+
     @Before
     public void setUp() throws Exception {
         defaultHektor = initHektor("hektor_config.yaml");
+        defaultLatch1 = new CountDownLatch(1);
+        defaultLatch2 = new CountDownLatch(1);
     }
 
     protected Hektor initHektor(final String configResourceName) throws IOException {

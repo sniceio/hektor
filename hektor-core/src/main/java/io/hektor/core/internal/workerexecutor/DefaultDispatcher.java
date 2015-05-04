@@ -6,6 +6,7 @@ import io.hektor.config.DispatcherConfiguration;
 import io.hektor.config.WorkerThreadExecutorConfig;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
+import io.hektor.core.internal.ActorBox;
 import io.hektor.core.internal.ActorStore;
 import io.hektor.core.internal.InternalDispatcher;
 import io.hektor.core.internal.InvokeActorTask;
@@ -80,13 +81,19 @@ public class DefaultDispatcher implements InternalDispatcher {
     }
 
     @Override
+    public ActorBox lookup(ActorRef ref) {
+        return actorStore.lookup(ref);
+    }
+
+    @Override
     public void dispatch(final ActorRef sender, final ActorRef receiver, final Object msg) {
         if (msg == null) {
             return;
         }
 
+        // tomorrow, if we pin an actor we could just override the hash code here...
         final BlockingQueue<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
-        final InvokeActorTask task = new InvokeActorTask(actorStore, sender, receiver, msg);
+        final InvokeActorTask task = InvokeActorTask.create(this, sender, receiver, msg);
         if (!queue.offer(task)) {
             System.err.println("oh man, queue is full");
         }

@@ -23,7 +23,7 @@ public class SimpleActorStore implements ActorStore {
 
     @Override
     public void store(final ActorRef ref, final Actor actor) {
-        actors.put(ref.path(), new ActorBox(actor, ref));
+        actors.put(ref.path(), ActorBox.create(actor, ref));
     }
 
     @Override

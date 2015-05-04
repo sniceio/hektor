@@ -9,7 +9,7 @@ public interface ActorContext {
 
     void unstash();
 
-    ActorRef actorOf(Props props);
+    ActorRef actorOf(String name, Props props);
 
     ActorRef sender();
 

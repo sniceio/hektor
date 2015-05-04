@@ -6,6 +6,20 @@ package io.hektor.core;
  */
 public interface Actor {
 
+    ThreadLocal<ActorContext> _ctx = new ThreadLocal<>();
+
+    default ActorRef self() {
+        return _ctx.get().self();
+    }
+
+    default ActorRef sender() {
+        return _ctx.get().sender();
+    }
+
+    default ActorContext ctx() {
+        return _ctx.get();
+    }
+
     /**
      * Will be invoked whenever this Actor receives a message.
      *

@@ -33,6 +33,14 @@ public class DummyActor implements Actor {
             context.sender().tell(msg + " back at you!", context.self());
         }
 
-        System.out.println("[" + Thread.currentThread().getName() + "] " + msg);
+        // System.out.println("[" + Thread.currentThread().getName() + "] Sender: " + ctx().sender().path() + " Self: " + ctx().self().path() + " Message: " + msg);
+        if (context.sender() == sender()) {
+            System.out.println("[" + Thread.currentThread().getName() + "] Sender is the same " + sender().path());
+        }
+
+        if (context.self() == self()) {
+            System.out.println("[" + Thread.currentThread().getName() + "] Self is the same " + self().path());
+        }
+        // System.out.println("[" + Thread.currentThread().getName() + "] Sender: " + ctx().sender() + " Self: " + ctx().self() + " Message: " + msg);
     }
 }

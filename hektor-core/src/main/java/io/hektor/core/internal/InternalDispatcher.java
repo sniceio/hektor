@@ -19,4 +19,6 @@ public interface InternalDispatcher extends Dispatcher {
     void register(ActorRef ref, Actor actor);
 
     void unregister(ActorRef ref);
+
+    ActorBox lookup(ActorRef ref);
 }

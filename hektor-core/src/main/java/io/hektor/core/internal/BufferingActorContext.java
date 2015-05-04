@@ -9,20 +9,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static io.hektor.core.internal.PreConditions.assertNotNull;
+
 /**
  * @author jonas@jonasborjesson.com
  */
 public class BufferingActorContext implements ActorContext {
 
-    private final ActorRef self;
+    private final ActorBox self;
     private final BufferingActorRef bufferingSelf;
 
     private final ActorRef sender;
     private final BufferingActorRef bufferingSender;
 
-    public BufferingActorContext(final ActorRef self, final ActorRef sender) {
+    private final InternalDispatcher dispatcher;
+
+    public BufferingActorContext(final InternalDispatcher dispatcher, final ActorBox self, final ActorRef sender) {
+        assertNotNull(sender);
+        this.dispatcher = dispatcher;
+
         this.self = self;
-        this.bufferingSelf = new BufferingActorRef(self);
+        this.bufferingSelf = new BufferingActorRef(self.ref());
 
         this.sender = sender;
         this.bufferingSender = new BufferingActorRef(sender);
@@ -56,7 +63,7 @@ public class BufferingActorContext implements ActorContext {
     }
 
     @Override
-    public ActorRef actorOf(Props props) {
+    public ActorRef actorOf(final String name, final Props props) {
         return null;
     }
 
@@ -67,7 +74,7 @@ public class BufferingActorContext implements ActorContext {
 
     @Override
     public ActorRef self() {
-        return self;
+        return bufferingSelf;
     }
 
     private static class BufferingActorRef implements ActorRef {
@@ -76,6 +83,8 @@ public class BufferingActorContext implements ActorContext {
         private List<Envelope> messages;
 
         public BufferingActorRef(final ActorRef self) {
+            System.err.println("I dont fucking get it. why is this null " + self);
+            assertNotNull(self);
             this.self = self;
         }
 
