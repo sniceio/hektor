@@ -5,6 +5,7 @@ import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,8 +18,13 @@ public class SimpleActorStore implements ActorStore {
     private final Map<ActorPath, ActorBox> actors = new ConcurrentHashMap<>(100);
 
     @Override
-    public ActorBox lookup(ActorRef ref) {
-        return actors.get(ref.path());
+    public Optional<ActorBox> lookup(final ActorRef ref) {
+        return lookup(ref.path());
+    }
+
+    @Override
+    public Optional<ActorBox> lookup(final ActorPath path) {
+        return Optional.ofNullable(actors.get(path));
     }
 
     @Override
@@ -27,7 +33,7 @@ public class SimpleActorStore implements ActorStore {
     }
 
     @Override
-    public ActorBox remove(final ActorRef ref) {
-        return actors.remove(ref.path());
+    public Optional<ActorBox> remove(final ActorRef ref) {
+        return Optional.ofNullable(actors.remove(ref.path()));
     }
 }

@@ -10,6 +10,7 @@ import io.hektor.core.internal.SimpleActorStore;
 import io.hektor.core.internal.workerexecutor.DefaultDispatcher;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -28,6 +29,14 @@ public interface Hektor {
      * @return
      */
     ActorRef actorOf(Props props, String name);
+
+    /**
+     * Lookup the reference of an actor based on its path
+     *
+     * @param path
+     * @return
+     */
+    Optional<ActorRef> lookup(String path);
 
     RouterBuilder routerWithName(String name);
 

@@ -1,7 +1,10 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.Actor;
+import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
+
+import java.util.Optional;
 
 /**
  *
@@ -9,9 +12,11 @@ import io.hektor.core.ActorRef;
  */
 public interface ActorStore {
 
-    ActorBox lookup(ActorRef ref);
+    Optional<ActorBox> lookup(ActorRef ref);
+
+    Optional<ActorBox> lookup(ActorPath path);
 
     void store(ActorRef ref, Actor actor);
 
-    ActorBox remove(ActorRef ref);
+    Optional<ActorBox> remove(ActorRef ref);
 }

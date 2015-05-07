@@ -2,6 +2,7 @@ package io.hektor.core.internal;
 
 import com.codahale.metrics.MetricRegistry;
 import io.hektor.core.Actor;
+import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Hektor;
@@ -10,6 +11,7 @@ import io.hektor.core.RoutingLogic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The default implementation of Hektor.
@@ -31,12 +33,31 @@ public class DefaultHektor implements Hektor {
 
     @Override
     public ActorRef actorOf(final Props props, final String name) {
-        final Actor actor = ReflectionHelper.constructActor(props);
         final ActorPath path = root.createChild(name);
-        final ActorRef ref = new DefaultActorRef(path, defaultDispatcher);
         final InternalDispatcher dispatcher = findDispatcher(props);
-        dispatcher.register(ref, actor);
+        final ActorRef ref = new DefaultActorRef(path, dispatcher);
+
+        final ActorContext oldCtx = Actor._ctx.get();
+        try {
+            ActorContext ctx = new ConstructorActorContext(ref);
+            Actor._ctx.set(ctx);
+            final Actor actor = ReflectionHelper.constructActor(props);
+            dispatcher.register(ref, actor);
+        } finally {
+            Actor._ctx.set(oldCtx);
+        }
+
         return ref;
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(final String path) throws IllegalArgumentException {
+        final Optional<ActorBox> box = defaultDispatcher.lookup(path);
+        if (box.isPresent()) {
+            return Optional.of(box.get().ref());
+        }
+
+        return Optional.empty();
     }
 
     @Override

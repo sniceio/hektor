@@ -1,8 +1,11 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.Actor;
+import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
+
+import java.util.Optional;
 
 /**
  * An internal extension to the Dispatcher
@@ -20,5 +23,16 @@ public interface InternalDispatcher extends Dispatcher {
 
     void unregister(ActorRef ref);
 
-    ActorBox lookup(ActorRef ref);
+    Optional<ActorBox> lookup(ActorRef ref);
+
+    Optional<ActorBox> lookup(ActorPath path);
+
+    /**
+     * Lookup the reference of an actor based on its absolute path expressed as a string.
+     *
+     * @param path
+     * @return
+     * @throws IllegalArgumentException in case the supplied path is not an absolute path
+     */
+    Optional<ActorBox> lookup(String path) throws IllegalArgumentException;
 }

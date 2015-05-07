@@ -1,9 +1,15 @@
 package io.hektor.core;
 
+import io.hektor.core.ParentActor.CreateChildMessage;
+import io.hektor.core.ParentActor.DummyMessage;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Basic tests to configure and start Hektor and send some basic messages through.
@@ -84,11 +90,45 @@ public class HektorTest extends HektorTestBase {
     public void testActorCreatingChildren() throws Exception {
         final Props props = Props.forActor(ParentActor.class).build();
         final ActorRef ref = defaultHektor.actorOf(props, "parent");
-        final ParentActor.DummyMessage msg = new ParentActor.DummyMessage("alice", defaultLatch1);
-        ref.tellAnonymously(msg);
+        final DummyMessage msgAlice = new DummyMessage("alice", defaultLatch1);
+        final DummyMessage msgBob = new DummyMessage("bob", defaultLatch2, "alice");
+        ref.tellAnonymously(msgAlice);
+        ref.tellAnonymously(msgBob);
         defaultLatch1.await();;
+        defaultLatch2.await();
     }
 
+    /**
+     * Create two siblings and have them send a message between each
+     * other using the context.lookup function.
+     * @throws Exception
+     */
+    @Test(timeout = 500)
+    public void testSiblingSendMessageToOtherSibling() throws Exception {
+        final Props props = Props.forActor(ParentActor.class).build();
+        final ActorRef ref = defaultHektor.actorOf(props, "parent");
+        ref.tellAnonymously(new CreateChildMessage("romeo", defaultLatch1));
+        ref.tellAnonymously(new CreateChildMessage("julia", defaultLatch2));
+
+        Thread.sleep(300);
+
+        // TODO: I guess we really shouldn't have to know the root of the hektor system
+        final Optional<ActorRef> julia = defaultHektor.lookup("/hektor/parent/julia");
+        final Optional<ActorRef> romeo = defaultHektor.lookup("/hektor/parent/romeo");
+
+        // TODO: this should work as well
+        // final Optional<ActorRef> romeo = defaultHektor.lookup("/parent/romeo");
+
+        assertThat(julia.isPresent(), is(true));
+        assertThat(romeo.isPresent(), is(true));
+
+        // send message to julia from romeo.
+        // it is expected that julia says hello back
+        // hence the hanging on the two latches...
+        julia.get().tell("hello julia", romeo.get());
+        defaultLatch1.await();
+        defaultLatch2.await();
+    }
 
     /**
      * Super simple routing logic that assumes that the message is an Integer and

@@ -1,5 +1,6 @@
 package io.hektor.core.internal;
 
+import io.hektor.core.Actor;
 import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
@@ -8,6 +9,7 @@ import io.hektor.core.Props;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
@@ -64,7 +66,28 @@ public class BufferingActorContext implements ActorContext {
 
     @Override
     public ActorRef actorOf(final String name, final Props props) {
-        return null;
+        if (self.hasChild(name)) {
+            // TODO: create a better exception
+            throw new RuntimeException("Child already exists");
+        }
+
+        final Actor actor = ReflectionHelper.constructActor(props);
+        final ActorPath path = self.ref().path().createChild(name);
+        final ActorRef ref = new DefaultActorRef(path, dispatcher);
+        dispatcher.register(ref, actor);
+
+        // TODO: store a reference of the child in the actor box
+        return ref;
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(final String path) {
+        final ActorPath actorPath = DefaultActorPath.create(self.ref().path(), path);
+        final Optional<ActorBox> box = dispatcher.lookup(actorPath);
+        if (box.isPresent()) {
+            return Optional.of(box.get().ref());
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -83,7 +106,6 @@ public class BufferingActorContext implements ActorContext {
         private List<Envelope> messages;
 
         public BufferingActorRef(final ActorRef self) {
-            System.err.println("I dont fucking get it. why is this null " + self);
             assertNotNull(self);
             this.self = self;
         }

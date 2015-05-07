@@ -29,11 +29,14 @@ public class HektorTestBase {
 
     protected CountDownLatch defaultLatch2;
 
+    protected CountDownLatch defaultLatch3;
+
     @Before
     public void setUp() throws Exception {
         defaultHektor = initHektor("hektor_config.yaml");
         defaultLatch1 = new CountDownLatch(1);
         defaultLatch2 = new CountDownLatch(1);
+        defaultLatch3 = new CountDownLatch(1);
     }
 
     protected Hektor initHektor(final String configResourceName) throws IOException {

@@ -4,6 +4,7 @@ import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
 
 import java.util.List;
+import java.util.Optional;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
@@ -41,18 +42,21 @@ public class InvokeActorTask implements Runnable {
     public void run() {
         Actor actor = null;
         try {
-            final ActorBox actorBox = dispatcher.lookup(receiver);
-            System.err.println(actorBox.ref().path());
-            final BufferingActorContext ctx = new BufferingActorContext(dispatcher, actorBox, sender);
-            actor = actorBox.actor();
-            System.err.println(Thread.currentThread().getName() + " Setting the actor context " + actor._ctx);
-            actor._ctx.set(ctx);
-            actor.onReceive(ctx, msg);
+            final Optional<ActorBox> actorBox = dispatcher.lookup(receiver);
+            if (actorBox.isPresent()) {
+                final BufferingActorContext ctx = new BufferingActorContext(dispatcher, actorBox.get(), sender);
+                actor = actorBox.get().actor();
+                actor._ctx.set(ctx);
+                actor.onReceive(ctx, msg);
 
-            final List<Envelope> messages = ctx.messages();
-            for (final Envelope envelope : messages) {
-                envelope.receiver().tell(envelope.message(), envelope.sender());
+                final List<Envelope> messages = ctx.messages();
+                for (final Envelope envelope : messages) {
+                    envelope.receiver().tell(envelope.message(), envelope.sender());
+                }
             }
+
+            // TODO: in the else case, should we deliver the lost message to
+            // a dead queue ala Akka?
         } catch (final Throwable t) {
             // Note: if an Actor throws an exception we will not
             // dispatch any of the messages it tried to send during
@@ -61,7 +65,6 @@ public class InvokeActorTask implements Runnable {
             t.printStackTrace();
         } finally {
             if (actor != null) {
-                System.err.println("Removing the actor context again " + actor._ctx);
                 actor._ctx.remove();
             }
         }

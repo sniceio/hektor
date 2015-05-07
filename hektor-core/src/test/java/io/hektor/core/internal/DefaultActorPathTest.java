@@ -47,6 +47,41 @@ public class DefaultActorPathTest {
         assertPath(child1, grandChild1, false);
     }
 
+    @Test
+    public void testCreatePathFromAbsolute() throws Exception {
+        assertPath("/hello/world");
+        assertPath("/hello");
+        assertPath("/hello/world/again/can/go/on/for/forever");
+        assertPath("/hello/", "/hello");
+    }
+
+    @Test
+    public void testCreatePathFromRelative() throws Exception {
+        assertPath("/hello/world", "../foo", "/hello/foo");
+        assertPath("/hello/world/one/two/three", "../foo", "/hello/world/one/two/foo");
+        assertPath("/hello/world/one/two/three", "../../foo", "/hello/world/one/foo");
+        assertPath("/hello/world/one/two/three", "../../../foo", "/hello/world/foo");
+
+        // Should be fine to specify just ./ as well. Perhaps not much
+        // use but make sense anyway.
+        assertPath("/hello/world", "./foo", "/hello/world/foo");
+    }
+
+    private void assertPath(final String path) {
+        assertPath(path, path);
+    }
+
+    private void assertPath(final String parentPath, final String relativePath, final String expected) {
+        final ActorPath parent = DefaultActorPath.create(null, parentPath);
+        final ActorPath actualPath = DefaultActorPath.create(parent, relativePath);
+        assertThat(actualPath.toString(), is(expected));
+    }
+
+    private void assertPath(final String path, final String expected) {
+        final ActorPath actorPath = DefaultActorPath.create(null, path);
+        assertThat(actorPath.toString(), is(expected));
+    }
+
     private void assertPath(final ActorPath path1, final ActorPath path2, final boolean equals) {
         if (equals) {
             assertThat(path1, is(path2));

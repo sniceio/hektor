@@ -33,6 +33,11 @@ public class DefaultActorRef implements ActorRef {
 
     @Override
     public void tellAnonymously(final Object msg) {
-        dispatcher.dispatch(null, this, msg);
+        dispatcher.dispatch(ActorRef.None(), this, msg);
+    }
+
+    @Override
+    public String toString()  {
+        return path.toString();
     }
 }

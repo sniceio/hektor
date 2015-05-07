@@ -5,9 +5,11 @@ import com.codahale.metrics.Timer;
 import io.hektor.config.DispatcherConfiguration;
 import io.hektor.config.WorkerThreadExecutorConfig;
 import io.hektor.core.Actor;
+import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.internal.ActorBox;
 import io.hektor.core.internal.ActorStore;
+import io.hektor.core.internal.DefaultActorPath;
 import io.hektor.core.internal.InternalDispatcher;
 import io.hektor.core.internal.InvokeActorTask;
 
@@ -81,8 +83,21 @@ public class DefaultDispatcher implements InternalDispatcher {
     }
 
     @Override
-    public ActorBox lookup(ActorRef ref) {
+    public Optional<ActorBox> lookup(final ActorRef ref) {
         return actorStore.lookup(ref);
+    }
+
+    @Override
+    public Optional<ActorBox> lookup(final ActorPath path) {
+        return actorStore.lookup(path);
+    }
+
+    @Override
+    public Optional<ActorBox> lookup(final String path) throws  IllegalArgumentException {
+        if (path != null && !path.isEmpty() && path.charAt(0) != '/') {
+            throw new IllegalArgumentException("You must specify an absolute reference to the actor");
+        }
+        return actorStore.lookup(DefaultActorPath.create(null, path));
     }
 
     @Override
