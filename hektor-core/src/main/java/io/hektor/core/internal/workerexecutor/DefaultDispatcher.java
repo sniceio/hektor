@@ -141,8 +141,8 @@ public class DefaultDispatcher implements InternalDispatcher {
 
         @Override
         public void run() {
-            System.err.println(id + " Worker starting");
-            final List<Runnable> jobs = new ArrayList<>(10);
+            final int drain = 10;
+            final List<Runnable> jobs = new ArrayList<>(drain);
             while (true) {
                 Timer.Context timerContext = null;
                 try {
@@ -152,7 +152,7 @@ public class DefaultDispatcher implements InternalDispatcher {
                     timerContext = jobTimer.time();
                     event.run();
 
-                    final int noOfJobs = this.queue.drainTo(jobs, 10);
+                    final int noOfJobs = this.queue.drainTo(jobs, drain);
                     for (int i = 0; i < noOfJobs; ++i) {
                         final Runnable job = jobs.get(i);
                         job.run();

@@ -10,6 +10,7 @@ public class ParentActor implements Actor {
     private final CountDownLatch latch;
     private final CountDownLatch stopLatch;
     private final CountDownLatch postStopLatch;
+    private final CountDownLatch terminatedLatch;
 
     public ParentActor() {
         this(new CountDownLatch(1), new CountDownLatch(1), new CountDownLatch(1));
@@ -24,9 +25,15 @@ public class ParentActor implements Actor {
     }
 
     public ParentActor(final CountDownLatch latch, final CountDownLatch stopLatch, final CountDownLatch postStopLatch) {
+        this(latch, stopLatch, postStopLatch, new CountDownLatch(1));
+    }
+
+    public ParentActor(final CountDownLatch latch, final CountDownLatch stopLatch,
+                       final CountDownLatch postStopLatch, final CountDownLatch terminatedLatch) {
         this.latch = latch;
         this.stopLatch = stopLatch;
         this.postStopLatch = postStopLatch;
+        this.terminatedLatch = terminatedLatch;
     }
 
     @Override
@@ -47,7 +54,7 @@ public class ParentActor implements Actor {
                 final ActorRef childRef = ctx().actorOf(message.nameOfChild, child);
                 childRef.tell(msg, context.sender());
             } else if (msg instanceof Terminated) {
-                System.err.println("A child of mine was just terminated: " + ((Terminated)msg).actor());
+                terminatedLatch.countDown();
             } else if (msg instanceof CreateChildMessage) {
                 final CreateChildMessage message = (CreateChildMessage)msg;
                 final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();

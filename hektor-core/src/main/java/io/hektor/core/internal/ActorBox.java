@@ -73,7 +73,6 @@ public class ActorBox {
     }
 
     public boolean hasNoChildren() {
-        System.err.println("Do i have any children?");
         return children.isEmpty();
     }
 

@@ -53,6 +53,7 @@
 
   <modules>
     <module>hektor-core</module>
+    <module>hektor-micro-benchmark</module>
   </modules>
 
   <dependencyManagement>

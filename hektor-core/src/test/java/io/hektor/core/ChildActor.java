@@ -59,7 +59,6 @@ public class ChildActor implements Actor {
                 sibling.get().tell(talkMsg.msg, self());
             }
         } else if (msg instanceof ParentActor.StopYourselfMessage){
-            System.err.println("I'm being asked to stop myself");
             ctx().stop();
         } else if (msg instanceof String){
             if (msg.toString().contains("hello")) {

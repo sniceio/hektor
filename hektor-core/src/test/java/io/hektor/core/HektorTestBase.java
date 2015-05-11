@@ -39,6 +39,8 @@ public class HektorTestBase {
      */
     protected CountDownLatch defaultPostStopLatch1;
 
+    protected CountDownLatch defaultTerminatedLatch1;
+
     protected CountDownLatch defaultLatch2;
 
     protected CountDownLatch defaultLatch3;
@@ -49,6 +51,7 @@ public class HektorTestBase {
         defaultLatch1 = new CountDownLatch(1);
         defaultStopLatch1 = new CountDownLatch(1);
         defaultPostStopLatch1 = new CountDownLatch(1);
+        defaultTerminatedLatch1 = new CountDownLatch(1);
 
         defaultLatch2 = new CountDownLatch(1);
         defaultLatch3 = new CountDownLatch(1);

@@ -186,9 +186,10 @@ public class HektorTest extends HektorTestBase {
 
         defaultHektor.lookup("./parent/julia").get().tellAnonymously(new ParentActor.StopYourselfMessage());
 
-        // TODO: figure out a way to keep track of the terminated events
-        Thread.sleep(100);
-        // julia is no more...
+        // we should have been getting a terminated event
+        defaultTerminatedLatch1.await();
+
+        // and therefore julia is no more...
         assertThat(defaultHektor.lookup("./parent/julia").isPresent(), is(false));
 
         // but the parent and romeo are both still around
@@ -196,9 +197,45 @@ public class HektorTest extends HektorTestBase {
         assertThat(defaultHektor.lookup("./parent/romeo").isPresent(), is(true));
     }
 
+    /**
+     * Create a parent, two children and ask both children to stop.
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 500)
+    public void testStoppingBothChildren() throws Exception {
+        final CountDownLatch terminatedLatch = new CountDownLatch(2);
+        createDefaultParentTwoChildrenWithTerminatedLatch(terminatedLatch);
+
+        defaultHektor.lookup("./parent/julia").get().tellAnonymously(new ParentActor.StopYourselfMessage());
+        defaultHektor.lookup("./parent/romeo").get().tellAnonymously(new ParentActor.StopYourselfMessage());
+
+        // we should have been getting a terminated event
+        terminatedLatch.await();
+
+        // and therefore julia is no more...
+        assertThat(defaultHektor.lookup("./parent/julia").isPresent(), is(false));
+        assertThat(defaultHektor.lookup("./parent/romeo").isPresent(), is(false));
+
+        // but the parent and romeo are both still around
+        assertThat(defaultHektor.lookup("parent").isPresent(), is(true));
+    }
+
     private ActorRef createDefaultParentTwoChildren() throws Exception {
+        return createDefaultParentTwoChildrenWithTerminatedLatch(defaultTerminatedLatch1);
+    }
+
+    /**
+     * Convenience method for creating two children as well as specifying the terminated latch.
+     *
+     * @param terminatedLatch the terminated latch will be used by the parent as a countdown latch for any
+     *                        terminated events it may receive.
+     * @return
+     * @throws Exception
+     */
+    private ActorRef createDefaultParentTwoChildrenWithTerminatedLatch(final CountDownLatch terminatedLatch) throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
-        final ActorRef ref = createParentActor(latch, defaultStopLatch1, defaultPostStopLatch1);
+        final ActorRef ref = createParentActor(latch, defaultStopLatch1, defaultPostStopLatch1, terminatedLatch);
         ref.tellAnonymously(new CreateChildMessage("romeo"));
         ref.tellAnonymously(new CreateChildMessage("julia"));
 
@@ -234,7 +271,7 @@ public class HektorTest extends HektorTestBase {
      * @throws Exception
      */
     private ActorRef createParentActor() throws Exception {
-        return createParentActor(defaultLatch1, defaultStopLatch1, defaultPostStopLatch1);
+        return createParentActor(defaultLatch1, defaultStopLatch1, defaultPostStopLatch1, defaultTerminatedLatch1);
     }
 
     /**
@@ -246,15 +283,24 @@ public class HektorTest extends HektorTestBase {
      * @throws Exception
      */
     private ActorRef createParentActor(final CountDownLatch latch) throws Exception {
-        final Props props = Props.forActor(ParentActor.class).withConstructorArg(latch).build();
-        return defaultHektor.actorOf(props, "parent");
+        return createParentActor(latch, defaultStopLatch1, defaultPostStopLatch1, defaultTerminatedLatch1);
     }
 
-    private ActorRef createParentActor(final CountDownLatch latch, final CountDownLatch stopLatch, final CountDownLatch postStopLatch) throws Exception {
+    private ActorRef createParentActor(final CountDownLatch latch,
+                                       final CountDownLatch stopLatch,
+                                       final CountDownLatch postStopLatch) throws Exception {
+        return createParentActor(latch, stopLatch, postStopLatch, defaultTerminatedLatch1);
+    }
+
+    private ActorRef createParentActor(final CountDownLatch latch,
+                                       final CountDownLatch stopLatch,
+                                       final CountDownLatch postStopLatch,
+                                       final CountDownLatch terminatedLatch) throws Exception {
         final Props props = Props.forActor(ParentActor.class)
                 .withConstructorArg(latch)
                 .withConstructorArg(stopLatch)
                 .withConstructorArg(postStopLatch)
+                .withConstructorArg(terminatedLatch)
                 .build();
         return defaultHektor.actorOf(props, "parent");
     }
