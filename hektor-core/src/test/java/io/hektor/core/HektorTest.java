@@ -103,21 +103,20 @@ public class HektorTest extends HektorTestBase {
      * other using the context.lookup function.
      * @throws Exception
      */
-    @Test(timeout = 500)
+    // @Test(timeout = 500)
+    @Test
     public void testSiblingSendMessageToOtherSibling() throws Exception {
-        final Props props = Props.forActor(ParentActor.class).build();
-        final ActorRef ref = defaultHektor.actorOf(props, "parent");
+        final CountDownLatch latch = new CountDownLatch(2);
+        final ActorRef ref = createParentActor(latch);
         ref.tellAnonymously(new CreateChildMessage("romeo", defaultLatch1));
         ref.tellAnonymously(new CreateChildMessage("julia", defaultLatch2));
 
-        Thread.sleep(300);
+        // wait to ensure that the parent actor got
+        // both messages to create new children
+        latch.await();
 
-        // TODO: I guess we really shouldn't have to know the root of the hektor system
-        final Optional<ActorRef> julia = defaultHektor.lookup("/hektor/parent/julia");
-        final Optional<ActorRef> romeo = defaultHektor.lookup("/hektor/parent/romeo");
-
-        // TODO: this should work as well
-        // final Optional<ActorRef> romeo = defaultHektor.lookup("/parent/romeo");
+        final Optional<ActorRef> julia = defaultHektor.lookup("./parent/julia");
+        final Optional<ActorRef> romeo = defaultHektor.lookup("./parent/romeo");
 
         assertThat(julia.isPresent(), is(true));
         assertThat(romeo.isPresent(), is(true));
@@ -131,16 +130,132 @@ public class HektorTest extends HektorTestBase {
     }
 
     /**
+     * It must of course be possible to stop an actor.
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 500)
+    public void testStoppingAnActor() throws Exception {
+        final ActorRef ref = createParentActor();
+
+        // as soon as we have a ref the actor must be available for
+        // lookup in the system
+        assertThat(defaultHektor.lookup("parent").isPresent(), is(true));
+        assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(true));
+
+        // ask the actor to stop itself.
+        ref.tellAnonymously(new ParentActor.StopYourselfMessage());
+
+        // make sure all the various methods are called, which
+        // are controlled by the different latches. Note, we have
+        // to call all latches because otherwise we wouldn't
+        // know if e.g. postStop was called but not stop()
+        defaultLatch1.await();
+        defaultStopLatch1.await();
+        defaultPostStopLatch1.await();
+
+        // after post stop the actor MUST be completely gone from
+        // the system.
+        assertThat(defaultHektor.lookup("parent").isPresent(), is(false));
+        assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(false));
+    }
+
+    @Test(timeout = 500)
+    public void testStoppingAnActorWithChildren() throws Exception {
+        final ActorRef ref = createDefaultParentTwoChildren();
+
+        // tell the parent to stop itself.
+        ref.tellAnonymously(new ParentActor.StopYourselfMessage());
+
+        defaultStopLatch1.await();
+        defaultPostStopLatch1.await();
+
+        assertThat(defaultHektor.lookup("parent").isPresent(), is(false));
+        assertThat(defaultHektor.lookup("./parent/julia").isPresent(), is(false));
+        assertThat(defaultHektor.lookup("./parent/romeo").isPresent(), is(false));
+    }
+
+    /**
+     * Create a parent, two children and ask one of the children to stop.
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 500)
+    public void testStoppingChildButNotParent() throws Exception {
+        final ActorRef ref = createDefaultParentTwoChildren();
+
+        defaultHektor.lookup("./parent/julia").get().tellAnonymously(new ParentActor.StopYourselfMessage());
+
+        // TODO: figure out a way to keep track of the terminated events
+        Thread.sleep(100);
+        // julia is no more...
+        assertThat(defaultHektor.lookup("./parent/julia").isPresent(), is(false));
+
+        // but the parent and romeo are both still around
+        assertThat(defaultHektor.lookup("parent").isPresent(), is(true));
+        assertThat(defaultHektor.lookup("./parent/romeo").isPresent(), is(true));
+    }
+
+    private ActorRef createDefaultParentTwoChildren() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(2);
+        final ActorRef ref = createParentActor(latch, defaultStopLatch1, defaultPostStopLatch1);
+        ref.tellAnonymously(new CreateChildMessage("romeo"));
+        ref.tellAnonymously(new CreateChildMessage("julia"));
+
+        // wait to ensure that the parent actor got
+        // both messages to create new children
+        latch.await();
+
+        // make sure that we now have to child actors
+        assertThat(defaultHektor.lookup("./parent/julia").isPresent(), is(true));
+        assertThat(defaultHektor.lookup("./parent/romeo").isPresent(), is(true));
+
+        return ref;
+    }
+
+    /**
      * Super simple routing logic that assumes that the message is an Integer and
      * uses it as an index into the list of routees when selecting which actor
      * should get the message.
      */
     private static class SimpleRoutingLogic implements RoutingLogic {
-
         @Override
         public ActorRef select(Object msg, List<ActorRef> routees) {
             Integer index = (Integer)msg;
             return routees.get(index);
         }
+    }
+
+    /**
+     * Convenience method for creating a parent actor under the name "parent" and that is
+     * using the default latch no 1.
+     *
+     * @return
+     * @throws Exception
+     */
+    private ActorRef createParentActor() throws Exception {
+        return createParentActor(defaultLatch1, defaultStopLatch1, defaultPostStopLatch1);
+    }
+
+    /**
+     * Convenience method for creating a parent actor under the name "parent" and is using
+     * the supplied latch.
+     *
+     * @param latch
+     * @return
+     * @throws Exception
+     */
+    private ActorRef createParentActor(final CountDownLatch latch) throws Exception {
+        final Props props = Props.forActor(ParentActor.class).withConstructorArg(latch).build();
+        return defaultHektor.actorOf(props, "parent");
+    }
+
+    private ActorRef createParentActor(final CountDownLatch latch, final CountDownLatch stopLatch, final CountDownLatch postStopLatch) throws Exception {
+        final Props props = Props.forActor(ParentActor.class)
+                .withConstructorArg(latch)
+                .withConstructorArg(stopLatch)
+                .withConstructorArg(postStopLatch)
+                .build();
+        return defaultHektor.actorOf(props, "parent");
     }
 }

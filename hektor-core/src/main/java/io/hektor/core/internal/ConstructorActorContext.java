@@ -43,6 +43,11 @@ public class ConstructorActorContext implements ActorContext {
     }
 
     @Override
+    public void stop() {
+        throw new IllegalStateException("You cannot stop yourself when being constructed");
+    }
+
+    @Override
     public Optional<ActorRef> lookup(final String path) {
         // TODO: implement
         throw new RuntimeException("Sorry, not implemented just yet");

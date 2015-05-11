@@ -7,10 +7,9 @@ import io.hektor.config.WorkerThreadExecutorConfig;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
-import io.hektor.core.internal.ActorBox;
 import io.hektor.core.internal.ActorStore;
-import io.hektor.core.internal.DefaultActorPath;
 import io.hektor.core.internal.InternalDispatcher;
+import io.hektor.core.internal.InternalHektor;
 import io.hektor.core.internal.InvokeActorTask;
 
 import java.util.ArrayList;
@@ -25,13 +24,26 @@ import java.util.concurrent.ExecutorService;
  */
 public class DefaultDispatcher implements InternalDispatcher {
 
+    /**
+     * This is the name of the dispatcher as configured
+     * by the user. Mainly used for logging.
+     */
     private final String name;
+
+    /**
+     * This is the root path of the entire actor system.
+     * It is primarily used for building up relative paths
+     * when a user is asking to find a specific actor.
+     */
+    private final ActorPath root;
+
     private final ExecutorService executorService;
     private final BlockingQueue<Runnable>[] workerQueue;
     private final Worker[] workers;
     private final int noOfWorkers;
     private final ActorStore actorStore;
     private final MetricRegistry metricRegistry;
+    private final InternalHektor hektor;
 
     /**
      * A metric timer for keeping track of the time a task stays in the
@@ -41,11 +53,15 @@ public class DefaultDispatcher implements InternalDispatcher {
     private final Timer[] inQueueLatency;
 
     public DefaultDispatcher(final String name,
+                             final ActorPath root,
+                             final InternalHektor hektor,
                              final ActorStore actorStore,
                              final MetricRegistry metricRegistry,
                              final DispatcherConfiguration config) {
         this.name = name;
+        this.root = root;
         this.actorStore = actorStore;
+        this.hektor = hektor;
         this.metricRegistry = metricRegistry;
 
         Optional<WorkerThreadExecutorConfig> optional = config.workerThreadExecutorConfig();
@@ -83,24 +99,6 @@ public class DefaultDispatcher implements InternalDispatcher {
     }
 
     @Override
-    public Optional<ActorBox> lookup(final ActorRef ref) {
-        return actorStore.lookup(ref);
-    }
-
-    @Override
-    public Optional<ActorBox> lookup(final ActorPath path) {
-        return actorStore.lookup(path);
-    }
-
-    @Override
-    public Optional<ActorBox> lookup(final String path) throws  IllegalArgumentException {
-        if (path != null && !path.isEmpty() && path.charAt(0) != '/') {
-            throw new IllegalArgumentException("You must specify an absolute reference to the actor");
-        }
-        return actorStore.lookup(DefaultActorPath.create(null, path));
-    }
-
-    @Override
     public void dispatch(final ActorRef sender, final ActorRef receiver, final Object msg) {
         if (msg == null) {
             return;
@@ -108,7 +106,7 @@ public class DefaultDispatcher implements InternalDispatcher {
 
         // tomorrow, if we pin an actor we could just override the hash code here...
         final BlockingQueue<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
-        final InvokeActorTask task = InvokeActorTask.create(this, sender, receiver, msg);
+        final InvokeActorTask task = InvokeActorTask.create(hektor, sender, receiver, msg);
         if (!queue.offer(task)) {
             System.err.println("oh man, queue is full");
         }

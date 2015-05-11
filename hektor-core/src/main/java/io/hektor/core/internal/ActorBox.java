@@ -2,6 +2,7 @@ package io.hektor.core.internal;
 
 import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
+import io.hektor.core.internal.messages.Stop;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +11,17 @@ import java.util.Map;
  * @author jonas@jonasborjesson.com
  */
 public class ActorBox {
+
     private final Actor actor;
     private final ActorRef ref;
+
+    /**
+     * Whenever the user asks an actor to stop we have a bunch of cleanup tasks
+     * to accomplish before we actually get to the point of stop completely.
+     * Until then, we do not e.g. want to process any new messages and this
+     * flag keeps track of if we are in shutting down state.
+     */
+    private boolean isStopped = false;
 
     /**
      * A map of all the children that has belongs to this actor.
@@ -32,12 +42,50 @@ public class ActorBox {
         return new ActorBox(actor, ref);
     }
 
+    /**
+     * Send a stop message to all our children (if any)
+     *
+     * @return the number of children that we had and is now asked to stop
+     */
+    public void stopChildren() {
+        System.err.println("Asking all children to stop");
+        children.values().forEach(child -> child.tell(Stop.MSG, ref));
+    }
+
+    public void addChild(final String name, final ActorRef ref) {
+        children.put(name, ref);
+    }
+
     public ActorRef getChild(final String name) {
         return children.get(name);
     }
 
     public boolean hasChild(final String name) {
         return children.containsKey(name);
+    }
+
+    /**
+     * Remove a child and return the total number of children this parent still has.
+     */
+    public int removeChild(final String name) {
+        children.remove(name);
+        return children.size();
+    }
+
+    public boolean hasNoChildren() {
+        System.err.println("Do i have any children?");
+        return children.isEmpty();
+    }
+
+    /**
+     * To indicate that this actor is being stopped, call this method.
+     */
+    public void stop() {
+        isStopped = true;
+    }
+
+    public boolean isStopped() {
+        return isStopped;
     }
 
     public ActorRef ref() {

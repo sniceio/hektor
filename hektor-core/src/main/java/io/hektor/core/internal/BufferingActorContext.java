@@ -1,6 +1,5 @@
 package io.hektor.core.internal;
 
-import io.hektor.core.Actor;
 import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
@@ -24,17 +23,23 @@ public class BufferingActorContext implements ActorContext {
     private final ActorRef sender;
     private final BufferingActorRef bufferingSender;
 
-    private final InternalDispatcher dispatcher;
+    private final InternalHektor hektor;
 
-    public BufferingActorContext(final InternalDispatcher dispatcher, final ActorBox self, final ActorRef sender) {
+    private boolean stop;
+
+    public BufferingActorContext(final InternalHektor hektor, final ActorBox self, final ActorRef sender) {
         assertNotNull(sender);
-        this.dispatcher = dispatcher;
+        this.hektor = hektor;
 
         this.self = self;
         this.bufferingSelf = new BufferingActorRef(self.ref());
 
         this.sender = sender;
         this.bufferingSender = new BufferingActorRef(sender);
+    }
+
+    protected boolean isStopped() {
+        return stop;
     }
 
     protected List<Envelope> messages() {
@@ -66,28 +71,15 @@ public class BufferingActorContext implements ActorContext {
 
     @Override
     public ActorRef actorOf(final String name, final Props props) {
-        if (self.hasChild(name)) {
-            // TODO: create a better exception
-            throw new RuntimeException("Child already exists");
-        }
-
-        final Actor actor = ReflectionHelper.constructActor(props);
-        final ActorPath path = self.ref().path().createChild(name);
-        final ActorRef ref = new DefaultActorRef(path, dispatcher);
-        dispatcher.register(ref, actor);
-
-        // TODO: store a reference of the child in the actor box
-        return ref;
+        final ActorRef child = hektor.actorOf(self.ref().path(), name, props);
+        self.addChild(name, child);
+        return child;
     }
 
     @Override
     public Optional<ActorRef> lookup(final String path) {
         final ActorPath actorPath = DefaultActorPath.create(self.ref().path(), path);
-        final Optional<ActorBox> box = dispatcher.lookup(actorPath);
-        if (box.isPresent()) {
-            return Optional.of(box.get().ref());
-        }
-        return Optional.empty();
+        return hektor.lookupActorBox(actorPath).map(ActorBox::ref);
     }
 
     @Override
@@ -98,6 +90,11 @@ public class BufferingActorContext implements ActorContext {
     @Override
     public ActorRef self() {
         return bufferingSelf;
+    }
+
+    @Override
+    public void stop() {
+        stop = true;
     }
 
     private static class BufferingActorRef implements ActorRef {

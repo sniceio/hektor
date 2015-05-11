@@ -6,6 +6,8 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.hektor.core.internal.PreConditions.assertNotNull;
+
 /**
  * @author jonas@jonasborjesson.com
  */
@@ -36,6 +38,8 @@ public interface Props {
         }
 
         public Builder withConstructorArg(final Object arg) {
+            // this will be an issue
+            assertNotNull(arg, "Argument cannot be null");
             if (args == null) {
                 args = new ArrayList<>(3);
             }

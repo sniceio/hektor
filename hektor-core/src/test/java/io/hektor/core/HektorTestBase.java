@@ -27,6 +27,18 @@ public class HektorTestBase {
      */
     protected CountDownLatch defaultLatch1;
 
+    /**
+     * The default stop latch used by the default implementation of
+     * ParentActor and will be called when the actor is asked to stop
+     * itself.
+     */
+    protected CountDownLatch defaultStopLatch1;
+
+    /**
+     *
+     */
+    protected CountDownLatch defaultPostStopLatch1;
+
     protected CountDownLatch defaultLatch2;
 
     protected CountDownLatch defaultLatch3;
@@ -35,6 +47,9 @@ public class HektorTestBase {
     public void setUp() throws Exception {
         defaultHektor = initHektor("hektor_config.yaml");
         defaultLatch1 = new CountDownLatch(1);
+        defaultStopLatch1 = new CountDownLatch(1);
+        defaultPostStopLatch1 = new CountDownLatch(1);
+
         defaultLatch2 = new CountDownLatch(1);
         defaultLatch3 = new CountDownLatch(1);
     }

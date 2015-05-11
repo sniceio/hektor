@@ -4,8 +4,10 @@ import com.codahale.metrics.MetricRegistry;
 import io.hektor.config.DispatcherConfiguration;
 import io.hektor.config.HektorConfiguration;
 import io.hektor.core.internal.ActorStore;
+import io.hektor.core.internal.DefaultActorPath;
 import io.hektor.core.internal.DefaultHektor;
 import io.hektor.core.internal.InternalDispatcher;
+import io.hektor.core.internal.InternalHektor;
 import io.hektor.core.internal.SimpleActorStore;
 import io.hektor.core.internal.workerexecutor.DefaultDispatcher;
 
@@ -37,6 +39,8 @@ public interface Hektor {
      * @return
      */
     Optional<ActorRef> lookup(String path);
+
+    Optional<ActorRef> lookup(ActorPath path);
 
     RouterBuilder routerWithName(String name);
 
@@ -85,22 +89,30 @@ public interface Hektor {
             if (actorStore == null) {
                 actorStore = new SimpleActorStore();
             }
-            final InternalDispatcher defaultDispatcher = createDefaultDispatcher(actorStore, dispatcherConfigs, registry);
-            return new DefaultHektor(defaultDispatcher, registry);
+            final ActorPath root = new DefaultActorPath(null, name);
+            // TODO: the dispatcher doesn't need to know the root
+            // it really should only be used for scheduling actors to run
+            // and nothing else. No lookup an actor etc.
+            final DefaultHektor hektor = new DefaultHektor(root, actorStore, registry);
+            final InternalDispatcher defaultDispatcher = createDefaultDispatcher(root, hektor, actorStore, dispatcherConfigs, registry);
+            hektor.setDefaultDispatcher(defaultDispatcher);
+            return hektor;
         }
 
         /**
          * If no dispatcher configuration has been specified we will
-         * generaet a default dispatcher.
+         * generate a default dispatcher.
          *
          * @return
          */
-        private InternalDispatcher createDefaultDispatcher(final ActorStore actorStore,
+        private InternalDispatcher createDefaultDispatcher(final ActorPath rootPath,
+                                                           final InternalHektor hektor,
+                                                           final ActorStore actorStore,
                                                            final Map<String, DispatcherConfiguration> configs,
                                                            final MetricRegistry registry) {
             if (configs.size() == 1) {
-                Map.Entry<String, DispatcherConfiguration> entry = configs.entrySet().iterator().next();
-                return new DefaultDispatcher(entry.getKey(), actorStore, registry, entry.getValue());
+                final Map.Entry<String, DispatcherConfiguration> entry = configs.entrySet().iterator().next();
+                return new DefaultDispatcher(entry.getKey(), rootPath, hektor, actorStore, registry, entry.getValue());
             }
 
             throw new IllegalArgumentException("Missing configuration");

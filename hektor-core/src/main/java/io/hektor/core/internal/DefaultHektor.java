@@ -5,7 +5,6 @@ import io.hektor.core.Actor;
 import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
-import io.hektor.core.Hektor;
 import io.hektor.core.Props;
 import io.hektor.core.RoutingLogic;
 
@@ -18,28 +17,40 @@ import java.util.Optional;
  *
  * @author jonas@jonasborjesson.com
  */
-public class DefaultHektor implements Hektor {
+public final class DefaultHektor implements InternalHektor {
 
-    private final InternalDispatcher defaultDispatcher;
+    private InternalDispatcher defaultDispatcher;
 
-    private final ActorPath root = new DefaultActorPath(null, "hektor");
+    private final ActorPath root;
 
     private final MetricRegistry metricRegistry;
 
-    public DefaultHektor(final InternalDispatcher defaultDispatcher, final MetricRegistry metricRegistry) {
-        this.defaultDispatcher = defaultDispatcher;
+    private final ActorStore actorStore;
+
+    public DefaultHektor(final ActorPath root, final ActorStore actorStore, final MetricRegistry metricRegistry) {
+        this.root = root;
+        this.actorStore = actorStore;
         this.metricRegistry = metricRegistry;
+    }
+
+    public void setDefaultDispatcher(final InternalDispatcher dispatcher) {
+        defaultDispatcher = dispatcher;
     }
 
     @Override
     public ActorRef actorOf(final Props props, final String name) {
-        final ActorPath path = root.createChild(name);
-        final InternalDispatcher dispatcher = findDispatcher(props);
+        return actorOf(root, name, props);
+    }
+
+    @Override
+    public ActorRef actorOf(final ActorPath parent, final String name, final Props props) {
+        final ActorPath path = parent.createChild(name);
+        final InternalDispatcher dispatcher = findDispatcher(path, props);
         final ActorRef ref = new DefaultActorRef(path, dispatcher);
 
         final ActorContext oldCtx = Actor._ctx.get();
         try {
-            ActorContext ctx = new ConstructorActorContext(ref);
+            final ActorContext ctx = new ConstructorActorContext(ref);
             Actor._ctx.set(ctx);
             final Actor actor = ReflectionHelper.constructActor(props);
             dispatcher.register(ref, actor);
@@ -51,13 +62,33 @@ public class DefaultHektor implements Hektor {
     }
 
     @Override
-    public Optional<ActorRef> lookup(final String path) throws IllegalArgumentException {
-        final Optional<ActorBox> box = defaultDispatcher.lookup(path);
-        if (box.isPresent()) {
-            return Optional.of(box.get().ref());
-        }
+    public Optional<ActorBox> lookupActorBox(final ActorRef ref) {
+        return actorStore.lookup(ref);
+    }
 
-        return Optional.empty();
+    @Override
+    public Optional<ActorBox> lookupActorBox(final ActorPath path) {
+        return actorStore.lookup(path);
+    }
+
+    @Override
+    public Optional<ActorBox> lookupActorBox(final String path) throws  IllegalArgumentException {
+        return actorStore.lookup(DefaultActorPath.create(root, path));
+    }
+
+    @Override
+    public void removeActor(final ActorRef ref) {
+        actorStore.remove(ref);
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(final String path) throws IllegalArgumentException {
+        return lookupActorBox(path).map(ActorBox::ref);
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(final ActorPath path) throws IllegalArgumentException {
+        return lookupActorBox(path).map(ActorBox::ref);
     }
 
     @Override
@@ -65,7 +96,14 @@ public class DefaultHektor implements Hektor {
         return new Builder(root, name);
     }
 
-    private InternalDispatcher findDispatcher(final Props props) {
+    /**
+     * Find a suitable dispatcher for the actor identified by the path and its props.
+     *
+     * @param path
+     * @param props
+     * @return
+     */
+    private InternalDispatcher findDispatcher(final ActorPath path, final Props props) {
         return defaultDispatcher;
     }
 

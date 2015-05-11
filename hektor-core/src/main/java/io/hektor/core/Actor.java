@@ -21,6 +21,25 @@ public interface Actor {
     }
 
     /**
+     * Called when an actor is supposed to stop. At this point an actor can
+     * emit new messages that will be processed but it cannot refuse
+     * being stopped. Once an actor is fully stopped (including its children)
+     * postStop will be called.
+     */
+    default void stop() {
+        // left empty intentionally
+    }
+
+    /**
+     * Called when an actor has been fully stopped, including its children.
+     * Implementing actors should override this method, the default one doesn't
+     * do anything. Also, in postStop, an actor cannot emit new messages.
+     */
+    default void postStop() {
+        // left empty intentionally.
+    }
+
+    /**
      * Will be invoked whenever this Actor receives a message.
      *
      * Note that any messages emitted by this Actor as a result of this invocation
