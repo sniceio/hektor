@@ -33,11 +33,29 @@ public class Benchmark {
         final Hektor hektor = initHektor(getConfiguration());
         WarmUpScenario warmUp = new WarmUpScenario(hektor);
         warmUp.warmUp(100);
-        System.err.println("Done");
-        warmUp.warmUp(300);
-        System.err.println("Done2");
-        warmUp.warmUp(6000);
-        System.err.println("Done3");
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        warmUp.warmUp(100);
+        System.err.println("Ok, resting...");
+        Thread.sleep(5000);
+        System.err.println("Ok, real test starting now...");
+        final long ts = System.currentTimeMillis();
+        for (int i = 0; i < 100000; ++i) {
+            warmUp.warmUp(100);
+        }
+        System.err.println("Done " + (System.currentTimeMillis() - ts));
     }
 
 }

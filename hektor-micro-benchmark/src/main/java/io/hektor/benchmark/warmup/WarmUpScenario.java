@@ -50,12 +50,10 @@ public class WarmUpScenario {
             actors[i].tellAnonymously(new TerminateYourself());
         }
 
-        System.err.println("Done with messages and stuff");
         postStopLatch.await(100, TimeUnit.MILLISECONDS);
 
         // Thread.sleep(1000);
 
-        System.err.println("make sure that they are all gone");
         for (int i = 0; i < actorCount; ++i) {
             hektor.lookup(name + i).ifPresent(ref -> System.err.println("Error"));
         }

@@ -49,6 +49,7 @@
     <junit.version>4.11</junit.version> 
     <jackson.version>2.5.3</jackson.version>
     <metrics.version>3.1.0</metrics.version>
+    <netty.version>4.1.0.Beta5</netty.version> 
   </properties>
 
   <modules>
@@ -99,6 +100,16 @@
         <type>jar</type>
         <scope>compile</scope>
     </dependency>
+
+    <!-- Only for the Hashweeled Timer -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-common</artifactId>
+      <version>${netty.version}</version>
+       <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+
 
     <!-- Test Dependencies -->
     <dependency>

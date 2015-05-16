@@ -4,6 +4,7 @@ import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
+import io.hektor.core.Scheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +81,11 @@ public class BufferingActorContext implements ActorContext {
     public Optional<ActorRef> lookup(final String path) {
         final ActorPath actorPath = DefaultActorPath.create(self.ref().path(), path);
         return hektor.lookupActorBox(actorPath).map(ActorBox::ref);
+    }
+
+    @Override
+    public Scheduler scheduler() {
+        return hektor.scheduler();
     }
 
     @Override

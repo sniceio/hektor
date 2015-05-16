@@ -6,6 +6,7 @@ import io.hektor.config.HektorConfiguration;
 import io.hektor.core.internal.ActorStore;
 import io.hektor.core.internal.DefaultActorPath;
 import io.hektor.core.internal.DefaultHektor;
+import io.hektor.core.internal.HashWheelScheduler;
 import io.hektor.core.internal.InternalDispatcher;
 import io.hektor.core.internal.InternalHektor;
 import io.hektor.core.internal.SimpleActorStore;
@@ -31,6 +32,14 @@ public interface Hektor {
      * @return
      */
     ActorRef actorOf(Props props, String name);
+
+    /**
+     * Obtain the system scheduler that can be used to schedule messages
+     * to be sent at some future point.
+     *
+     * @return
+     */
+    Scheduler scheduler();
 
     /**
      * Lookup the reference of an actor based on its path
@@ -64,6 +73,8 @@ public interface Hektor {
 
         private ActorStore actorStore;
 
+        private Scheduler scheduler;
+
         private Builder(final String name) {
             this.name = name;
         }
@@ -75,6 +86,11 @@ public interface Hektor {
 
         public Builder withActorStore(final ActorStore actorStore) {
             this.actorStore = actorStore;
+            return this;
+        }
+
+        public Builder withScheduler(final Scheduler scheduler) {
+            this.scheduler = scheduler;
             return this;
         }
 
@@ -93,7 +109,8 @@ public interface Hektor {
             // TODO: the dispatcher doesn't need to know the root
             // it really should only be used for scheduling actors to run
             // and nothing else. No lookup an actor etc.
-            final DefaultHektor hektor = new DefaultHektor(root, actorStore, registry);
+            final Scheduler scheduler = this.scheduler != null ? this.scheduler : new HashWheelScheduler();
+            final DefaultHektor hektor = new DefaultHektor(root, scheduler, actorStore, registry);
             final InternalDispatcher defaultDispatcher = createDefaultDispatcher(root, hektor, actorStore, dispatcherConfigs, registry);
             hektor.setDefaultDispatcher(defaultDispatcher);
             return hektor;

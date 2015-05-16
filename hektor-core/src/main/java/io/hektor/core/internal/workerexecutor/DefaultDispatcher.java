@@ -141,7 +141,7 @@ public class DefaultDispatcher implements InternalDispatcher {
 
         @Override
         public void run() {
-            final int drain = 10;
+            final int drain = 15;
             final List<Runnable> jobs = new ArrayList<>(drain);
             while (true) {
                 Timer.Context timerContext = null;

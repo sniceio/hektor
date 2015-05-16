@@ -3,6 +3,7 @@ package io.hektor.core.internal;
 import io.hektor.core.ActorContext;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
+import io.hektor.core.Scheduler;
 
 import java.util.Optional;
 
@@ -51,5 +52,10 @@ public class ConstructorActorContext implements ActorContext {
     public Optional<ActorRef> lookup(final String path) {
         // TODO: implement
         throw new RuntimeException("Sorry, not implemented just yet");
+    }
+
+    @Override
+    public Scheduler scheduler() {
+        throw new RuntimeException("need to implmenet this for the constructor context as well");
     }
 }

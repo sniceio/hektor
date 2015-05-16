@@ -1,12 +1,16 @@
 package io.hektor.core;
 
+import io.hektor.core.ParentActor.CancelScheduledTask;
 import io.hektor.core.ParentActor.CreateChildMessage;
 import io.hektor.core.ParentActor.DummyMessage;
+import io.hektor.core.ParentActor.TimedMessage;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -67,7 +71,6 @@ public class HektorTest extends HektorTestBase {
         routerRef.tellAnonymously(1);
         routerRef.tellAnonymously(1);
         routerRef.tellAnonymously(1);
-        Thread.sleep(100);
         latches[1].await();
 
         routerRef.tellAnonymously(0);
@@ -158,6 +161,50 @@ public class HektorTest extends HektorTestBase {
         // the system.
         assertThat(defaultHektor.lookup("parent").isPresent(), is(false));
         assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(false));
+    }
+
+
+    /**
+     * Make sure that we can actually schedule a task by asking one actor to send
+     * a delayed task to another where the message is to kill yourself. Hence, if
+     * the actor asked to stop itself gets stopped we should be able to pick that
+     * up from the stop latch.
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 1500)
+    public void testScheduleTask() throws Exception {
+        final ActorRef one = createParentActor();
+        final ActorRef two = createParentActor();
+
+        // this is the message we will send to one, who then will
+        // send the StopYourselfMessage to two.
+        final long ts = System.currentTimeMillis();
+        final TimedMessage msg = new TimedMessage(new ParentActor.StopYourselfMessage(), two, one, Duration.ofMillis(1000));
+        one.tellAnonymously(msg);
+        defaultPostStopLatch1.await();
+    }
+
+    /**
+     * Ensure that we actually can cancel a task as well.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testScheduleTaskThenCancel() throws Exception {
+        final ActorRef one = createParentActor();
+        final ActorRef two = createParentActor();
+
+        // this is the message we will send to one, who then will
+        // send the StopYourselfMessage to two.
+        final TimedMessage msg = new TimedMessage(new ParentActor.StopYourselfMessage(), two, one, Duration.ofMillis(1000));
+        one.tellAnonymously(msg);
+        one.tellAnonymously(new CancelScheduledTask());
+        defaultPostStopLatch1.await(2000, TimeUnit.MILLISECONDS);
+
+        // since we cancelled the task the post stop latch
+        // should NOT have fired.
+        assertThat(defaultPostStopLatch1.getCount(), is(1L));
     }
 
     @Test(timeout = 500)

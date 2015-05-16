@@ -1,5 +1,7 @@
 package io.hektor.core;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -11,6 +13,11 @@ public class ParentActor implements Actor {
     private final CountDownLatch stopLatch;
     private final CountDownLatch postStopLatch;
     private final CountDownLatch terminatedLatch;
+
+    /**
+     * The Cancellable if there are any outstanding delayed tasks.
+     */
+    private Optional<Cancellable> cancellable;
 
     public ParentActor() {
         this(new CountDownLatch(1), new CountDownLatch(1), new CountDownLatch(1));
@@ -53,6 +60,13 @@ public class ParentActor implements Actor {
                 final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
                 final ActorRef childRef = ctx().actorOf(message.nameOfChild, child);
                 childRef.tell(msg, context.sender());
+            } else if (msg instanceof CancelScheduledTask) {
+                System.err.println("Cancelling task");
+                cancellable.ifPresent(v -> v.cancel());
+            } else if (msg instanceof TimedMessage) {
+                System.err.println("Scheudling timer");
+                final TimedMessage timed = (TimedMessage)msg;
+                cancellable = Optional.of(ctx().scheduler().schedule(timed.msg, timed.sender, timed.receiver, timed.delay));
             } else if (msg instanceof Terminated) {
                 terminatedLatch.countDown();
             } else if (msg instanceof CreateChildMessage) {
@@ -72,6 +86,31 @@ public class ParentActor implements Actor {
      * Send this message to have the actor stop itself.
      */
     public static class StopYourselfMessage {
+    }
+
+    /**
+     * Send this message to ask the actor to cancel any tasks
+     * it has outstanding.
+     */
+    public static class CancelScheduledTask {
+    }
+
+    /**
+     * Send this message to an actor and ask it to schedule a timer
+     * that when fired sends the other message
+     */
+    public static class TimedMessage {
+        public final Duration delay;
+        public final Object msg;
+        public final ActorRef receiver;
+        public final ActorRef sender;
+
+        public TimedMessage(final Object msg, ActorRef receiver, ActorRef sender, final Duration delay) {
+            this.delay = delay;
+            this.msg = msg;
+            this.receiver = receiver;
+            this.sender = sender;
+        }
     }
 
     public static class TalkToSiblingMessage {

@@ -7,6 +7,7 @@ import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
 import io.hektor.core.RoutingLogic;
+import io.hektor.core.Scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +28,11 @@ public final class DefaultHektor implements InternalHektor {
 
     private final ActorStore actorStore;
 
-    public DefaultHektor(final ActorPath root, final ActorStore actorStore, final MetricRegistry metricRegistry) {
+    private final Scheduler scheduler;
+
+    public DefaultHektor(final ActorPath root, final Scheduler scheduler, final ActorStore actorStore, final MetricRegistry metricRegistry) {
         this.root = root;
+        this.scheduler = scheduler;
         this.actorStore = actorStore;
         this.metricRegistry = metricRegistry;
     }
@@ -40,6 +44,11 @@ public final class DefaultHektor implements InternalHektor {
     @Override
     public ActorRef actorOf(final Props props, final String name) {
         return actorOf(root, name, props);
+    }
+
+    @Override
+    public Scheduler scheduler() {
+        return scheduler;
     }
 
     @Override

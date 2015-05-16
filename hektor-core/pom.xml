@@ -37,6 +37,11 @@
         <artifactId>jackson-annotations</artifactId>
     </dependency>
 
+    <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-common</artifactId>
+    </dependency>
+
     <!-- Test Dependencies -->
     <dependency>
       <groupId>junit</groupId>

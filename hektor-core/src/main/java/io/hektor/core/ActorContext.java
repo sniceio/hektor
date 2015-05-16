@@ -50,6 +50,8 @@ public interface ActorContext {
      */
     Optional<ActorRef> lookup(final String path);
 
+    Scheduler scheduler();
+
     /**
      * TODO: do we want this?
      *
