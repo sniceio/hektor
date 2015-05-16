@@ -6,6 +6,7 @@ import io.hektor.core.internal.messages.Stop;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -56,8 +57,8 @@ public class ActorBox {
         children.put(name, ref);
     }
 
-    public ActorRef getChild(final String name) {
-        return children.get(name);
+    public Optional<ActorRef> getChild(final String name) {
+        return Optional.ofNullable(children.get(name));
     }
 
     public boolean hasChild(final String name) {

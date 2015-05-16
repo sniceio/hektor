@@ -30,7 +30,7 @@ public class ChildActor implements Actor {
     }
 
     @Override
-    public void onReceive(final ActorContext context, final Object msg) {
+    public void onReceive(final Object msg) {
         // if we have a ref in the dummy msg then send a message
         // over to that actor as well.
         if (msg instanceof DummyMessage) {

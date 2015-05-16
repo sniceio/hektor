@@ -49,7 +49,7 @@ public interface Actor {
      *
      * <pre>
      *     ...
-     *     context.sender().tell("hello world", context.self());
+     *     ctx().sender().tell("hello world", context.self());
      *     ...
      * </pre>
      *
@@ -65,13 +65,12 @@ public interface Actor {
      *
      * <pre>
      *     ...
-     *     context.sender().tell("It's a cruel world", context.self());
+     *     ctx().sender().tell("It's a cruel world", context.self());
      *     ...
      *     throw new RuntimeException("I crashed!!!");
      * </pre>
      *
-     * @param context
      * @param msg
      */
-    void onReceive(ActorContext context, Object msg);
+    void onReceive(Object msg);
 }

@@ -151,9 +151,7 @@ public class PropsTest {
         }
 
         @Override
-        public void onReceive(final ActorContext cttx, final Object msg) {
-
-        }
+        public void onReceive(final Object msg) {}
     }
 
 }

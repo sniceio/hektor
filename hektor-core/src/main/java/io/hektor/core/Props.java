@@ -52,9 +52,13 @@ public interface Props {
             return this;
         }
 
-        public Props build() throws NoSuchMethodException {
-            final Constructor<? extends Actor> constructor = ReflectionHelper.findConstructor(clazz, args);
-            return new DefaultProps(clazz, constructor, args, router);
+        public Props build() throws NoSuchConstructorException {
+            try {
+                final Constructor<? extends Actor> constructor = ReflectionHelper.findConstructor(clazz, args);
+                return new DefaultProps(clazz, constructor, args, router);
+            } catch (final NoSuchMethodException e) {
+                throw new NoSuchConstructorException(e.getMessage());
+            }
         }
 
         private static class DefaultProps implements Props {

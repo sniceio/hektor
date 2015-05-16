@@ -58,4 +58,11 @@ public class ConstructorActorContext implements ActorContext {
     public Scheduler scheduler() {
         throw new RuntimeException("need to implmenet this for the constructor context as well");
     }
+
+    @Override
+    public Optional<ActorRef> child(String child) {
+        // no children just yet since this object
+        // is just being created.
+        return Optional.empty();
+    }
 }

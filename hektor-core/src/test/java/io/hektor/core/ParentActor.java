@@ -53,33 +53,27 @@ public class ParentActor implements Actor {
     }
 
     @Override
-    public void onReceive(final ActorContext context, final Object msg) {
-        try {
-            if (msg instanceof DummyMessage) {
-                final DummyMessage message = (DummyMessage) msg;
-                final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
-                final ActorRef childRef = ctx().actorOf(message.nameOfChild, child);
-                childRef.tell(msg, context.sender());
-            } else if (msg instanceof CancelScheduledTask) {
-                System.err.println("Cancelling task");
-                cancellable.ifPresent(v -> v.cancel());
-            } else if (msg instanceof TimedMessage) {
-                System.err.println("Scheudling timer");
-                final TimedMessage timed = (TimedMessage)msg;
-                cancellable = Optional.of(ctx().scheduler().schedule(timed.msg, timed.sender, timed.receiver, timed.delay));
-            } else if (msg instanceof Terminated) {
-                terminatedLatch.countDown();
-            } else if (msg instanceof CreateChildMessage) {
-                final CreateChildMessage message = (CreateChildMessage)msg;
-                final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
-                ctx().actorOf(message.nameOfChild, child);
-            } else if (msg instanceof StopYourselfMessage) {
-                ctx().stop();
-            }
-            latch.countDown();
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException("Strange", e);
+    public void onReceive(final Object msg) {
+        if (msg instanceof DummyMessage) {
+            final DummyMessage message = (DummyMessage) msg;
+            final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
+            final ActorRef childRef = ctx().actorOf(message.nameOfChild, child);
+            childRef.tell(msg, sender());
+        } else if (msg instanceof CancelScheduledTask) {
+            cancellable.ifPresent(c -> c.cancel());
+        } else if (msg instanceof TimedMessage) {
+            final TimedMessage timed = (TimedMessage) msg;
+            cancellable = Optional.of(ctx().scheduler().schedule(timed.msg, timed.sender, timed.receiver, timed.delay));
+        } else if (msg instanceof Terminated) {
+            terminatedLatch.countDown();
+        } else if (msg instanceof CreateChildMessage) {
+            final CreateChildMessage message = (CreateChildMessage) msg;
+            final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
+            ctx().actorOf(message.nameOfChild, child);
+        } else if (msg instanceof StopYourselfMessage) {
+            ctx().stop();
         }
+        latch.countDown();
     }
 
     /**

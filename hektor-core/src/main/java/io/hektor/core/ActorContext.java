@@ -48,9 +48,17 @@ public interface ActorContext {
      * @param path
      * @return
      */
-    Optional<ActorRef> lookup(final String path);
+    Optional<ActorRef> lookup(String path);
 
     Scheduler scheduler();
+
+    /**
+     * Convenience method to look up a child.
+     *
+     * @param child
+     * @return
+     */
+    Optional<ActorRef> child(String child);
 
     /**
      * TODO: do we want this?

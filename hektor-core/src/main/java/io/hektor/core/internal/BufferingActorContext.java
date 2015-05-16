@@ -89,6 +89,11 @@ public class BufferingActorContext implements ActorContext {
     }
 
     @Override
+    public Optional<ActorRef> child(final String child) {
+        return self.getChild(child);
+    }
+
+    @Override
     public ActorRef sender() {
         return bufferingSender;
     }

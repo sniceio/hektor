@@ -24,7 +24,8 @@ public class DummyActor implements Actor {
     }
 
     @Override
-    public void onReceive(final ActorContext context, final Object msg) {
+    public void onReceive(final Object msg) {
+        final ActorContext context = ctx();
         if (latch != null) {
             latch.countDown();;
         }

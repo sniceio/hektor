@@ -45,7 +45,7 @@ public class InvokeActorTask implements Runnable {
         try {
             final BufferingActorContext ctx = new BufferingActorContext(hektor, box, sender);
             Actor._ctx.set(ctx);
-            box.actor().onReceive(ctx, msg);
+            box.actor().onReceive(msg);
 
             final List<Envelope> messages = ctx.messages();
             for (final Envelope envelope : messages) {
