@@ -6,7 +6,6 @@ import io.hektor.core.ActorRef;
 import io.hektor.core.Terminated;
 import io.hektor.core.internal.messages.Stop;
 
-import java.util.List;
 import java.util.Optional;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
@@ -41,26 +40,21 @@ public class InvokeActorTask implements Runnable {
         this.msg = msg;
     }
 
-    private Optional<BufferingActorContext> invokeActor(final ActorBox box) {
+    private Optional<DefaultActorContext> invokeActor(final ActorBox box) {
+        final DefaultActorContext ctx = new DefaultActorContext(hektor, box, sender);
         try {
-            final BufferingActorContext ctx = new BufferingActorContext(hektor, box, sender);
+            // final BufferingActorContext ctx = new BufferingActorContext(hektor, box, sender);
             Actor._ctx.set(ctx);
+            System.err.println("receiving a message on actor");
             box.actor().onReceive(msg);
 
-            final List<Envelope> messages = ctx.messages();
-            for (final Envelope envelope : messages) {
-                envelope.receiver().tell(envelope.message(), envelope.sender());
-            }
             return Optional.of(ctx);
         } catch (final Throwable t) {
-            // Note: if an Actor throws an exception we will not
-            // dispatch any of the messages it tried to send during
-            // this invocation. This is done on purpose and according
-            // to contract as documented on the Actor interface.
             t.printStackTrace();
         } finally {
             Actor._ctx.remove();
         }
+
         return Optional.empty();
     }
 
@@ -134,10 +128,17 @@ public class InvokeActorTask implements Runnable {
             // process the msg. Remember, when an actor has
             // been asked to stop, it will no longer process
             // any new messages.
-            final Optional<BufferingActorContext> ctx = invokeActor(box);
-            if (ctx.isPresent() && ctx.get().isStopped()) {
-                box.stop();
-            }
+            final Optional<DefaultActorContext> ctx = invokeActor(box);
+
+            ctx.ifPresent(c -> {
+                c.bufferedMessages().stream().forEach(e ->
+                        e.receiver().tell(Priority.HIGH, e.message(), e.sender()));
+
+                if (c.isStopped()) {
+                    box.stop();
+                }
+            });
+
         } else {
             // we received a msg to an actor that is already in the stopping
             // phase so we will simply ignore it.

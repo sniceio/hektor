@@ -57,7 +57,6 @@ public class HashWheelScheduler implements Scheduler {
 
         @Override
         public void run(final Timeout timeout) throws Exception {
-            System.err.println("Running the timeout...");
             receiver.tell(msg, sender);
         }
     }

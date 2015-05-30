@@ -31,7 +31,7 @@ public class WorkerThreadExecutorConfig {
 
         private int noOfWorkers;
 
-        private Builder() {
+        public Builder() {
             // left empty intentionally.
         }
 

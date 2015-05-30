@@ -34,7 +34,7 @@ public class BufferingActorContextTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        defaultActorBox = ActorBox.create(defaultActor, defaultActorRef);
+        defaultActorBox = ActorBox.create(new DefaultMailBox(), defaultActor, defaultActorRef);
     }
 
     @Test

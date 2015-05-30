@@ -1,5 +1,7 @@
 package io.hektor.core.internal;
 
+import io.hektor.core.Actor;
+import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
@@ -28,7 +30,24 @@ public class DefaultActorRef implements ActorRef {
 
     @Override
     public void tell(final Object msg, final ActorRef sender) {
-        dispatcher.dispatch(sender, this, msg);
+        final ActorContext ctx = Actor._ctx.get();
+        if (ctx != null) {
+            try {
+                final DefaultActorContext bufCtx = (DefaultActorContext)ctx;
+                bufCtx.buffer(msg, this, sender);
+            } catch (final ClassCastException e) {
+                // ignore. shouldn't happen but if it does
+                // then just dispatch the message.
+                dispatcher.dispatch(sender, this, msg);
+            }
+        } else {
+            dispatcher.dispatch(sender, this, msg);
+        }
+    }
+
+    @Override
+    public void tell(Priority priority, Object msg, ActorRef sender) {
+        tell(msg, sender);
     }
 
     @Override

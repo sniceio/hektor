@@ -1,5 +1,7 @@
 package io.hektor.core;
 
+import io.hektor.core.internal.Priority;
+
 /**
  * @author jonas@jonasborjesson.com
  */
@@ -17,6 +19,8 @@ public interface ActorRef {
     ActorPath path();
 
     void tell(Object msg, ActorRef sender);
+
+    void tell(Priority priority, Object msg, ActorRef sender);
 
     /**
      * Send a message to the actor but specify no sender.
@@ -41,6 +45,11 @@ public interface ActorRef {
 
         @Override
         public void tell(Object msg, ActorRef sender) {
+            // ignored
+        }
+
+        @Override
+        public void tell(Priority priority, Object msg, ActorRef sender) {
             // ignored
         }
 

@@ -7,6 +7,7 @@ import io.hektor.config.WorkerThreadExecutorConfig;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
+import io.hektor.core.internal.ActorBox;
 import io.hektor.core.internal.ActorStore;
 import io.hektor.core.internal.InternalDispatcher;
 import io.hektor.core.internal.InternalHektor;
@@ -22,7 +23,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * @author jonas@jonasborjesson.com
  */
-public class DefaultDispatcher implements InternalDispatcher {
+public class DefaultDispatcher2 implements InternalDispatcher {
 
     /**
      * This is the name of the dispatcher as configured
@@ -53,12 +54,12 @@ public class DefaultDispatcher implements InternalDispatcher {
      */
     private final Timer[] inQueueLatency;
 
-    public DefaultDispatcher(final String name,
-                             final ActorPath root,
-                             final InternalHektor hektor,
-                             final ActorStore actorStore,
-                             final MetricRegistry metricRegistry,
-                             final DispatcherConfiguration config) {
+    public DefaultDispatcher2(final String name,
+                              final ActorPath root,
+                              final InternalHektor hektor,
+                              final ActorStore actorStore,
+                              final MetricRegistry metricRegistry,
+                              final DispatcherConfiguration config) {
         this.name = name;
         this.root = root;
         this.actorStore = actorStore;
@@ -108,6 +109,14 @@ public class DefaultDispatcher implements InternalDispatcher {
         if (msg == null) {
             return;
         }
+
+        final Optional<ActorBox> box = actorStore.lookup(receiver);
+        /*
+        box.ifPresent(b -> {
+            final Envelope envelope = new Envelope(sender, receiver, msg);
+            b.mailBox().offer(envelope);
+        });
+        */
 
         final BlockingQueue<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
         // final BlockingDeque<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];

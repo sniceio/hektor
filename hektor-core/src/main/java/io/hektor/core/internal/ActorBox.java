@@ -14,6 +14,7 @@ import java.util.Optional;
 public class ActorBox {
 
     private final Actor actor;
+
     private final ActorRef ref;
 
     /**
@@ -23,6 +24,8 @@ public class ActorBox {
      * flag keeps track of if we are in shutting down state.
      */
     private boolean isStopped = false;
+
+    private final MailBox mailBox;
 
     /**
      * A map of all the children that has belongs to this actor.
@@ -34,13 +37,23 @@ public class ActorBox {
      */
     private final Map<String, ActorRef> children = new HashMap<>();
 
-    private ActorBox(final Actor actor, final ActorRef ref) {
+    private ActorBox(final MailBox mailBox, final Actor actor, final ActorRef ref) {
+        this.mailBox = mailBox;
         this.actor = actor;
         this.ref = ref;
     }
 
-    public static ActorBox create(final Actor actor, final ActorRef ref) {
-        return new ActorBox(actor, ref);
+    public static ActorBox create(final MailBox mailBox, final Actor actor, final ActorRef ref) {
+        return new ActorBox(mailBox, actor, ref);
+    }
+
+    /**
+     * Return the mail box belonging to this actor.
+     *
+     * @return
+     */
+    public MailBox mailBox() {
+        return mailBox;
     }
 
     /**
@@ -49,7 +62,6 @@ public class ActorBox {
      * @return the number of children that we had and is now asked to stop
      */
     public void stopChildren() {
-        System.err.println("Asking all children to stop");
         children.values().forEach(child -> child.tell(Stop.MSG, ref));
     }
 

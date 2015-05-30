@@ -162,7 +162,7 @@ public final class DefaultHektor implements InternalHektor {
         private final ActorPath path;
         private final List<ActorRef> actors;
 
-        private RouterActorRef(final RoutingLogic routingLogic, final ActorPath path, List<ActorRef> actors) {
+        private RouterActorRef(final RoutingLogic routingLogic, final ActorPath path, final List<ActorRef> actors) {
             this.routingLogic = routingLogic;
             this.path = path;
             this.actors = actors;
@@ -175,8 +175,14 @@ public final class DefaultHektor implements InternalHektor {
 
         @Override
         public void tell(final Object msg, final ActorRef sender) {
+            tell(Priority.NORMAL, msg, sender);
+        }
+
+        @Override
+        public void tell(final Priority priority, final Object msg, final ActorRef sender) {
             final ActorRef receiver = routingLogic.select(msg, actors);
-            receiver.tell(msg, sender);
+            receiver.tell(priority, msg, sender);
+
         }
 
         @Override

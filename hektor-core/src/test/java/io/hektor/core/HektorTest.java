@@ -106,8 +106,7 @@ public class HektorTest extends HektorTestBase {
      * other using the context.lookup function.
      * @throws Exception
      */
-    // @Test(timeout = 500)
-    @Test
+    @Test(timeout = 500)
     public void testSiblingSendMessageToOtherSibling() throws Exception {
         final CountDownLatch latch = new CountDownLatch(2);
         final ActorRef ref = createParentActor(latch);

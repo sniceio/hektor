@@ -20,9 +20,13 @@ public class HektorConfiguration {
      * will be added.
      */
     @JsonProperty
-    private final Map<String, DispatcherConfiguration> dispatchers = new HashMap<>();
+    private Map<String, DispatcherConfiguration> dispatchers = new HashMap<>();
 
     public Map<String, DispatcherConfiguration> dispatchers() {
         return Collections.unmodifiableMap(dispatchers);
+    }
+
+    public void dispatchers(Map<String, DispatcherConfiguration> dispatchers) {
+        this.dispatchers = Collections.unmodifiableMap(dispatchers);
     }
 }

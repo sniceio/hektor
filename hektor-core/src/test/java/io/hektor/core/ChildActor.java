@@ -55,13 +55,11 @@ public class ChildActor implements Actor {
             // i guess we are supposed to talk to one of our siblings, let's do that!
             TalkToSiblingMessage talkMsg = (TalkToSiblingMessage)msg;
             Optional<ActorRef> sibling = ctx().lookup("../" + talkMsg.sibling);
-            if (sibling.isPresent()) {
-                sibling.get().tell(talkMsg.msg, self());
-            }
+            sibling.ifPresent(ref -> ref.tell(talkMsg.msg, self()));
         } else if (msg instanceof ParentActor.StopYourselfMessage){
             ctx().stop();
         } else if (msg instanceof String){
-            if (msg.toString().contains("hello")) {
+            if (msg.toString().contains("hello") && latch.getCount() > 0) {
                 latch.countDown();
                 sender().tell("hello back", self());
             }
