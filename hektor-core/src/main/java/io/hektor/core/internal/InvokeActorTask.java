@@ -45,7 +45,6 @@ public class InvokeActorTask implements Runnable {
         try {
             // final BufferingActorContext ctx = new BufferingActorContext(hektor, box, sender);
             Actor._ctx.set(ctx);
-            System.err.println("receiving a message on actor");
             box.actor().onReceive(msg);
 
             return Optional.of(ctx);
