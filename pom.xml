@@ -55,7 +55,6 @@
   <modules>
     <module>hektor-core</module>
     <module>hektor-fsm</module>
-    <module>hektor-actor</module>
     <module>hektor-micro-benchmark</module>
   </modules>
 
