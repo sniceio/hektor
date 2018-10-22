@@ -64,6 +64,10 @@ public class StateBuilder<S extends Enum<S>, C extends Context, D extends Data> 
         return this;
     }
 
+    public EventBuildStep<S, C, D> transitionToSelf() {
+        return transitionTo(state);
+    }
+
     public EventBuildStep<S, C, D> transitionTo(final S state) {
         return new EventBuildStep<S, C, D>() {
 
