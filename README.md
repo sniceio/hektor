@@ -1,14 +1,12 @@
-sipstack.io
+hektor.io
 =======
 
-Sipstack.io is an initiative to write a new breed of JVM based SIP stacks that is ops-friendly and high-performing out-of-the-box. It comes with sophisticated configuration, io.sipstack.application.application metrics and operational tools, allowing you and your team to build a production ready SIP service in the shortest amount of time possible
-
-For more information, please see [the documentation](http://www.sipstack.io).
+Not your average Actor!
 
 
 License
 -------
 
-Copyright (c) 2013-2014 Jonas Borjesson, aboutsip.com, sipstack.io
+Copyright (c) 2013-2019 Jonas Borjesson, aboutsip.com, sipstack.io, snice.io
 
-sipstack.io and all projects under aboutsip.com are released under the terms of the MIT license, see LICENSE
+All projects under hektor.io and snice.io are released under the terms of the MIT license, see LICENSE
