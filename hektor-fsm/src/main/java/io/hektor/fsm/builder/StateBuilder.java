@@ -29,6 +29,10 @@ public class StateBuilder<S extends Enum<S>, C extends Context, D extends Data> 
         this.state = state;
     }
 
+    public S getState() {
+        return state;
+    }
+
     /**
      * Register an action that will be executed upon entering this state.
      *
