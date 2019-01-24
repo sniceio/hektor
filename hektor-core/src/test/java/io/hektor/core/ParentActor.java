@@ -56,7 +56,7 @@ public class ParentActor implements Actor {
     public void onReceive(final Object msg) {
         if (msg instanceof DummyMessage) {
             final DummyMessage message = (DummyMessage) msg;
-            final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
+            final Props child = Props.forActor(ChildActor.class, () -> new ChildActor(message.latch));
             final ActorRef childRef = ctx().actorOf(message.nameOfChild, child);
             childRef.tell(msg, sender());
         } else if (msg instanceof CancelScheduledTask) {
@@ -68,7 +68,7 @@ public class ParentActor implements Actor {
             terminatedLatch.countDown();
         } else if (msg instanceof CreateChildMessage) {
             final CreateChildMessage message = (CreateChildMessage) msg;
-            final Props child = Props.forActor(ChildActor.class).withConstructorArg(message.latch).build();
+            final Props child = Props.forActor(ChildActor.class, () -> new ChildActor(message.latch));
             ctx().actorOf(message.nameOfChild, child);
         } else if (msg instanceof StopYourselfMessage) {
             ctx().stop();

@@ -59,6 +59,7 @@ public final class DefaultHektor implements InternalHektor {
 
         final ActorContext oldCtx = Actor._ctx.get();
         try {
+            System.err.println("Constructing a new Actor of name: " + name);
             final ActorContext ctx = new ConstructorActorContext(ref);
             Actor._ctx.set(ctx);
             final Actor actor = ReflectionHelper.constructActor(props);

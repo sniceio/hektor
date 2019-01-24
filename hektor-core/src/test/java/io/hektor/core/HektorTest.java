@@ -32,23 +32,27 @@ public class HektorTest extends HektorTestBase {
      */
     @Test(timeout = 500)
     public void testSimpleSendMessage() throws Exception {
-        final Props props = Props.forActor(DummyActor.class).withConstructorArg(defaultLatch1).build();
-        final ActorRef ref = defaultHektor.actorOf(props, "hello");
+        final ActorRef ref = defaultHektor.actorOf(DummyActor.props(defaultLatch1), "hello");
         ref.tellAnonymously("hello world");
         defaultLatch1.await();
     }
 
     @Test(timeout = 500)
     public void testSimpleReplyToMessage() throws Exception {
-        final Props props1 = Props.forActor(DummyActor.class).withConstructorArg(defaultLatch1).build();
-        final ActorRef ref1 = defaultHektor.actorOf(props1, "first");
-
-        final Props props2 = Props.forActor(DummyActor.class).withConstructorArg(defaultLatch2).withConstructorArg(true).build();
-        final ActorRef ref2 = defaultHektor.actorOf(props2, "second");
+        final ActorRef ref1 = defaultHektor.actorOf(DummyActor.props(defaultLatch1, false), "first");
+        final ActorRef ref2 = defaultHektor.actorOf(DummyActor.props(defaultLatch2, true), "second");
 
         ref2.tell("hello no 2", ref1);
         defaultLatch1.await();
         defaultLatch2.await();
+    }
+
+    @Test(timeout = 500)
+    public void testSendToSelf() throws Exception {
+        final CountDownLatch latch = new CountDownLatch(10);
+        final ActorRef selfish = defaultHektor.actorOf(SelfishActor.props(latch), "selfish");
+        selfish.tellAnonymously("You're the best");
+        latch.await();
     }
 
     @Test(timeout = 500)
@@ -61,8 +65,7 @@ public class HektorTest extends HektorTestBase {
 
         for (int i = 0; i < count; ++i) {
             latches[i] = new CountDownLatch(1);
-            final Props props = Props.forActor(DummyActor.class).withConstructorArg(latches[i]).build();
-            final ActorRef ref = defaultHektor.actorOf(props, "hello-" + i);
+            final ActorRef ref = defaultHektor.actorOf(DummyActor.props(latches[i]), "hello-" + i);
             routerBuilder.withRoutee(ref);
         }
 
@@ -91,7 +94,7 @@ public class HektorTest extends HektorTestBase {
      */
     @Test(timeout = 500)
     public void testActorCreatingChildren() throws Exception {
-        final Props props = Props.forActor(ParentActor.class).build();
+        final Props props = Props.forActor(ParentActor.class, () -> new ParentActor());
         final ActorRef ref = defaultHektor.actorOf(props, "parent");
         final DummyMessage msgAlice = new DummyMessage("alice", defaultLatch1);
         final DummyMessage msgBob = new DummyMessage("bob", defaultLatch2, "alice");
@@ -342,12 +345,9 @@ public class HektorTest extends HektorTestBase {
                                        final CountDownLatch stopLatch,
                                        final CountDownLatch postStopLatch,
                                        final CountDownLatch terminatedLatch) throws Exception {
-        final Props props = Props.forActor(ParentActor.class)
-                .withConstructorArg(latch)
-                .withConstructorArg(stopLatch)
-                .withConstructorArg(postStopLatch)
-                .withConstructorArg(terminatedLatch)
-                .build();
+        final Props props =
+                Props.forActor(ParentActor.class, () -> new ParentActor(latch, stopLatch, postStopLatch, terminatedLatch));
+
         return defaultHektor.actorOf(props, "parent");
     }
 }

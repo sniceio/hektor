@@ -10,6 +10,14 @@ public class DummyActor implements Actor {
     private final CountDownLatch latch;
     private final boolean doReply;
 
+    public static Props props(final CountDownLatch latch) {
+        return props(latch, false);
+    }
+
+    public static Props props(final CountDownLatch latch, final boolean reply) {
+        return Props.forActor(DummyActor.class, () -> new DummyActor(latch, reply));
+    }
+
     public DummyActor() {
         this(null);
     }

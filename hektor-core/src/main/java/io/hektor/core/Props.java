@@ -1,50 +1,65 @@
 package io.hektor.core;
 
-import io.hektor.core.internal.ReflectionHelper;
+import com.sun.org.apache.xml.internal.dtm.ref.sax2dtm.SAX2DTM2;
+import io.hektor.core.internal.PreConditions;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
 /**
  * @author jonas@jonasborjesson.com
  */
-public interface Props {
+public interface Props<T extends Actor> {
 
-    static Builder forActor(final Class<? extends Actor> clazz) {
-        return new Builder(clazz);
+    static <T extends Actor> CreatorStep<T> forActor(final Class<T> clazz) {
+        return creator -> {
+            assertNotNull(creator, "The creator cannot be null");
+            return new Builder<T>(clazz, creator);
+        };
     }
 
-    Class<? extends Actor> clazz();
+    /**
+     * Create a new {@link Props} for the given {@link Actor}.
+     *
+     * @param clazz the actual class of the implementing {@link Actor}
+     * @param creator a factory function for creating the actual actor instance.
+     * @return
+     */
+    static <T extends Actor> Props<T> forActor(final Class<T> clazz, final Supplier<T> creator) {
+        assertNotNull(clazz, "The class cannot be null");
+        assertNotNull(creator, "The creator cannot be null");
+        return new Builder.DefaultProps<>(clazz, creator, null);
+    }
 
-    Constructor<? extends Actor> constructor();
+    Class<T> clazz();
 
-    List<Object> arguments();
+    /**
+     * The function for creating a new instance of the actor.
+     *
+     * @return
+     */
+    Supplier<T> creator();
 
-    Router router();
+    Optional<Router> router();
 
-    static class Builder {
+    interface CreatorStep<T extends Actor> {
+        Builder<T> withCreator(Supplier<T> creator);
+    }
 
-        private List<Object> args;
+    class Builder<T extends Actor> {
+
+        // private List<Object> args;
 
         private Router router;
 
-        private final Class<? extends Actor> clazz;
+        private final Class<T> clazz;
+        private final Supplier<T> creator;
 
-        private Builder(Class<? extends Actor> clazz) {
+        private Builder(final Class<T> clazz, final Supplier<T> creator) {
             this.clazz = clazz;
-        }
-
-        public Builder withConstructorArg(final Object arg) {
-            // this will be an issue
-            assertNotNull(arg, "Argument cannot be null");
-            if (args == null) {
-                args = new ArrayList<>(3);
-            }
-            args.add(arg);
-            return this;
+            this.creator = creator;
         }
 
         public Builder withRouter(final Router router) {
@@ -53,54 +68,37 @@ public interface Props {
         }
 
         public Props build() throws NoSuchConstructorException {
-            try {
-                final Constructor<? extends Actor> constructor = ReflectionHelper.findConstructor(clazz, args);
-                return new DefaultProps(clazz, constructor, args, router);
-            } catch (final NoSuchMethodException e) {
-                throw new NoSuchConstructorException(e.getMessage());
-            }
+            return new DefaultProps(clazz, creator, router);
         }
 
-        private static class DefaultProps implements Props {
+        private static class DefaultProps<T extends Actor> implements Props<T> {
 
-            private final Class<? extends Actor> clazz;
-            private final Constructor<? extends Actor> constructor;
-            private final List<Object> args;
-            private final Router router;
+            private final Class<T> clazz;
+            private final Supplier<T> creator;
+            private final Optional<Router> router;
 
-            private DefaultProps(final Class<? extends Actor> clazz,
-                                 final Constructor<? extends Actor> constructor,
-                                 final List<Object> args,
+            private DefaultProps(final Class<T> clazz,
+                                 final Supplier<T> creator,
                                  final Router router) {
                 this.clazz = clazz;
-                this.constructor = constructor;
-                this.args = args;
-                this.router = router;
+                this.creator = creator;
+                this.router = Optional.ofNullable(router);
             }
 
             @Override
-            public Class<? extends Actor> clazz() {
+            public Class<T> clazz() {
                 return clazz;
             }
 
             @Override
-            public Constructor<? extends Actor> constructor() {
-                return constructor;
+            public Supplier<T> creator() {
+                return creator;
             }
 
             @Override
-            public List<Object> arguments() {
-                return args;
+            public Optional<Router> router() {
+                return router;
             }
-
-            @Override
-            public Router router() {
-                return null;
-            }
-
         }
-
     }
-
-
 }
