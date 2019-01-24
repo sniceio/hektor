@@ -13,6 +13,8 @@ import java.util.List;
 public class ReflectionHelper {
 
     public static Actor constructActor(final Props props) {
+        return (Actor)props.creator().get();
+        /*
         try {
             final Constructor<? extends Actor> constructor = props.constructor();
             final List<Object> args = props.arguments();
@@ -28,6 +30,7 @@ public class ReflectionHelper {
             e.printStackTrace();
         }
         return null;
+        */
     }
 
     public static Constructor<? extends Actor> findConstructor(final Class<? extends Actor> clazz,
