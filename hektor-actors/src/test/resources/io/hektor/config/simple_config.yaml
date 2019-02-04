@@ -1,0 +1,7 @@
+
+dispatchers:
+    my-dispatcher:
+        executor: worker-thread-executor
+        workerThreadExecutor:
+            noOfWorkers: 4
+        throughput: 75

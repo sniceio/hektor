@@ -1,6 +1,7 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.ActorContext;
+import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
 import io.hektor.core.Scheduler;
@@ -14,7 +15,10 @@ public class ConstructorActorContext implements ActorContext {
 
     private final ActorRef self;
 
-    public ConstructorActorContext(final ActorRef self) {
+    private final InternalHektor hektor;
+
+    public ConstructorActorContext(final InternalHektor hektor, final ActorRef self) {
+        this.hektor = hektor;
         this.self = self;
     }
 
@@ -50,8 +54,13 @@ public class ConstructorActorContext implements ActorContext {
 
     @Override
     public Optional<ActorRef> lookup(final String path) {
-        // TODO: implement
-        throw new RuntimeException("Sorry, not implemented just yet");
+        final ActorPath actorPath = DefaultActorPath.create(self.path(), path);
+        return lookup(actorPath);
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(ActorPath path) {
+        return hektor.lookupActorBox(path).map(ActorBox::ref);
     }
 
     @Override

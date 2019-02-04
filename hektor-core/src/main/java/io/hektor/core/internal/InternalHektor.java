@@ -42,4 +42,14 @@ public interface InternalHektor extends Hektor {
      * @param ref
      */
     void removeActor(ActorRef ref);
+
+    /**
+     * Setup a one actor to watch the life-cycle event of another.
+     *
+     * @param watcher the watcher that wishes to monitor the target
+     * @param target the actor we are monitoring.
+     * @return boolean indicating whether setting up the watch was successful. This would return
+     * false if e.g. the target Actor doesn't exist (perhaps it once did but it does no more).
+     */
+    boolean watch(ActorRef watcher, ActorRef target);
 }

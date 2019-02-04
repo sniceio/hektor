@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
@@ -135,7 +136,12 @@ public class BufferingActorContext implements ActorContext {
     @Override
     public Optional<ActorRef> lookup(final String path) {
         final ActorPath actorPath = DefaultActorPath.create(self.ref().path(), path);
-        return hektor.lookupActorBox(actorPath).map(ActorBox::ref);
+        return lookup(actorPath);
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(ActorPath path) {
+        return hektor.lookupActorBox(path).map(ActorBox::ref);
     }
 
     @Override
@@ -192,6 +198,11 @@ public class BufferingActorContext implements ActorContext {
         }
 
         @Override
+        public CompletionStage<Object> ask(final Object msg, final ActorRef sender) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
         public void tell(final Object msg, final ActorRef sender) {
             tell(Priority.NORMAL, msg, sender);
         }
@@ -218,6 +229,11 @@ public class BufferingActorContext implements ActorContext {
         public void tellAnonymously(final Object msg) {
             throw new RuntimeException("Sorry, not implemented just yet");
 
+        }
+
+        @Override
+        public void monitor(ActorRef ref) {
+            throw new RuntimeException("Sorry, not implemented just yet");
         }
     }
 }

@@ -48,6 +48,22 @@ public class DefaultActorPathTest {
     }
 
     @Test
+    public void testGetRoot() throws Exception {
+        final ActorPath path = DefaultActorPath.create(null, "/one/two/three");
+        assertThat(path.isRoot(), is(false));
+
+        ActorPath root = path.getRoot();
+        assertThat(root.isRoot(), is(true));
+        assertThat(root.name(), is("one"));
+        assertThat(root.parent().isPresent(), is(false));
+        assertThat(root.getRoot(), is(root));
+
+        final ActorPath child = DefaultActorPath.create(path, "/child/hello");
+        assertThat(child.isRoot(), is(false));
+        assertThat(path.getRoot(), is(child.getRoot()));
+    }
+
+    @Test
     public void testCreatePathFromAbsolute() throws Exception {
         assertPath("/hello/world");
         assertPath("/hello");

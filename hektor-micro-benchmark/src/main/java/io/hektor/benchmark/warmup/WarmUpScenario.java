@@ -30,7 +30,7 @@ public class WarmUpScenario {
         final String name = "foo";
         final ActorRef[] actors = new ActorRef[actorCount];
         for (int i = 0; i < actorCount; ++i) {
-            final Props props = Props.forActor(WarmUpActor.class).withConstructorArg(postStopLatch).build();
+            final Props props = WarmUpActor.props(postStopLatch);
             final ActorRef actor = hektor.actorOf(props, name + i);
             actors[i] = actor;
         }

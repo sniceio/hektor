@@ -20,6 +20,10 @@ public interface Actor {
         return _ctx.get();
     }
 
+    default void start() {
+        // left empty intentionally
+    }
+
     /**
      * Called when an actor is supposed to stop. At this point an actor can
      * emit new messages that will be processed but it cannot refuse

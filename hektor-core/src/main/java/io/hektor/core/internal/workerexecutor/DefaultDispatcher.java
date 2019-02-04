@@ -11,13 +11,17 @@ import io.hektor.core.internal.ActorStore;
 import io.hektor.core.internal.InternalDispatcher;
 import io.hektor.core.internal.InternalHektor;
 import io.hektor.core.internal.InvokeActorTask;
+import io.snice.preconditions.PreConditions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+
+import static io.snice.preconditions.PreConditions.assertNotNull;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -108,14 +112,28 @@ public class DefaultDispatcher implements InternalDispatcher {
         if (msg == null) {
             return;
         }
+        internalDispatch(sender, receiver, msg, null);
+    }
+
+    public void internalDispatch(final ActorRef sender, final ActorRef receiver, final Object msg, final CompletableFuture<Object> askFuture) {
 
         final BlockingQueue<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
         // final BlockingDeque<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
-        final InvokeActorTask task = InvokeActorTask.create(hektor, sender, receiver, msg);
+        final InvokeActorTask task = InvokeActorTask.create(hektor, sender, receiver, msg, askFuture);
         if (!queue.offer(task)) {
             System.err.println("oh man, queue is full");
         }
     }
+
+    @Override
+    public CompletableFuture<Object> ask(final ActorRef sender, final ActorRef receiver, final Object msg) {
+        assertNotNull(msg, "If you are asking something you cannot pass in an empty message");
+        final CompletableFuture<Object> askFuture = new CompletableFuture<>();
+        internalDispatch(sender, receiver, msg, askFuture);
+        return askFuture;
+    }
+
+
 
     private static class Worker implements Runnable {
 

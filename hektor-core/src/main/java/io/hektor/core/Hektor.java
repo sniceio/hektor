@@ -14,6 +14,7 @@ import io.hektor.core.internal.workerexecutor.DefaultDispatcher;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -52,6 +53,8 @@ public interface Hektor {
     Optional<ActorRef> lookup(ActorPath path);
 
     RouterBuilder routerWithName(String name);
+
+    CompletionStage<Void> terminate();
 
     interface RouterBuilder {
 
@@ -100,6 +103,7 @@ public interface Hektor {
         }
 
         public Hektor build() {
+            final HektorConfiguration config = ensureConfiguration();
             MetricRegistry registry = metricRegistry != null ? metricRegistry : new MetricRegistry();
             final Map<String, DispatcherConfiguration> dispatcherConfigs = config.dispatchers();
             if (actorStore == null) {
@@ -114,6 +118,14 @@ public interface Hektor {
             final InternalDispatcher defaultDispatcher = createDefaultDispatcher(root, hektor, actorStore, dispatcherConfigs, registry);
             hektor.setDefaultDispatcher(defaultDispatcher);
             return hektor;
+        }
+
+        private HektorConfiguration ensureConfiguration() {
+            if (config != null) {
+                return config;
+            }
+
+            return new HektorConfiguration();
         }
 
         /**
