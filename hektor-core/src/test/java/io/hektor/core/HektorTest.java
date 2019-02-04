@@ -134,37 +134,6 @@ public class HektorTest extends HektorTestBase {
         defaultLatch2.await();
     }
 
-    /**
-     * It must of course be possible to stop an actor.
-     *
-     * @throws Exception
-     */
-    @Test(timeout = 500)
-    public void testStoppingAnActor() throws Exception {
-        final ActorRef ref = createParentActor();
-
-        // as soon as we have a ref the actor must be available for
-        // lookup in the system
-        assertThat(defaultHektor.lookup("parent").isPresent(), is(true));
-        assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(true));
-
-        // ask the actor to stop itself.
-        ref.tellAnonymously(new ParentActor.StopYourselfMessage());
-
-        // make sure all the various methods are called, which
-        // are controlled by the different latches. Note, we have
-        // to call all latches because otherwise we wouldn't
-        // know if e.g. postStop was called but not stop()
-        defaultLatch1.await();
-        defaultStopLatch1.await();
-        defaultPostStopLatch1.await();
-
-        // after post stop the actor MUST be completely gone from
-        // the system.
-        assertThat(defaultHektor.lookup("parent").isPresent(), is(false));
-        assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(false));
-    }
-
 
     /**
      * Make sure that we can actually schedule a task by asking one actor to send
@@ -270,84 +239,5 @@ public class HektorTest extends HektorTestBase {
         assertThat(defaultHektor.lookup("parent").isPresent(), is(true));
     }
 
-    private ActorRef createDefaultParentTwoChildren() throws Exception {
-        return createDefaultParentTwoChildrenWithTerminatedLatch(defaultTerminatedLatch1);
-    }
 
-    /**
-     * Convenience method for creating two children as well as specifying the terminated latch.
-     *
-     * @param terminatedLatch the terminated latch will be used by the parent as a countdown latch for any
-     *                        terminated events it may receive.
-     * @return
-     * @throws Exception
-     */
-    private ActorRef createDefaultParentTwoChildrenWithTerminatedLatch(final CountDownLatch terminatedLatch) throws Exception {
-        final CountDownLatch latch = new CountDownLatch(2);
-        final ActorRef ref = createParentActor(latch, defaultStopLatch1, defaultPostStopLatch1, terminatedLatch);
-        ref.tellAnonymously(new CreateChildMessage("romeo"));
-        ref.tellAnonymously(new CreateChildMessage("julia"));
-
-        // wait to ensure that the parent actor got
-        // both messages to create new children
-        latch.await();
-
-        // make sure that we now have to child actors
-        assertThat(defaultHektor.lookup("./parent/julia").isPresent(), is(true));
-        assertThat(defaultHektor.lookup("./parent/romeo").isPresent(), is(true));
-
-        return ref;
-    }
-
-    /**
-     * Super simple routing logic that assumes that the message is an Integer and
-     * uses it as an index into the list of routees when selecting which actor
-     * should get the message.
-     */
-    private static class SimpleRoutingLogic implements RoutingLogic {
-        @Override
-        public ActorRef select(Object msg, List<ActorRef> routees) {
-            Integer index = (Integer)msg;
-            return routees.get(index);
-        }
-    }
-
-    /**
-     * Convenience method for creating a parent actor under the name "parent" and that is
-     * using the default latch no 1.
-     *
-     * @return
-     * @throws Exception
-     */
-    private ActorRef createParentActor() throws Exception {
-        return createParentActor(defaultLatch1, defaultStopLatch1, defaultPostStopLatch1, defaultTerminatedLatch1);
-    }
-
-    /**
-     * Convenience method for creating a parent actor under the name "parent" and is using
-     * the supplied latch.
-     *
-     * @param latch
-     * @return
-     * @throws Exception
-     */
-    private ActorRef createParentActor(final CountDownLatch latch) throws Exception {
-        return createParentActor(latch, defaultStopLatch1, defaultPostStopLatch1, defaultTerminatedLatch1);
-    }
-
-    private ActorRef createParentActor(final CountDownLatch latch,
-                                       final CountDownLatch stopLatch,
-                                       final CountDownLatch postStopLatch) throws Exception {
-        return createParentActor(latch, stopLatch, postStopLatch, defaultTerminatedLatch1);
-    }
-
-    private ActorRef createParentActor(final CountDownLatch latch,
-                                       final CountDownLatch stopLatch,
-                                       final CountDownLatch postStopLatch,
-                                       final CountDownLatch terminatedLatch) throws Exception {
-        final Props props =
-                Props.forActor(ParentActor.class, () -> new ParentActor(latch, stopLatch, postStopLatch, terminatedLatch));
-
-        return defaultHektor.actorOf(props, "parent");
-    }
 }

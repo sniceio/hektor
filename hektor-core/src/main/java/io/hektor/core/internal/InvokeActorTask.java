@@ -3,10 +3,13 @@ package io.hektor.core.internal;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
-import io.hektor.core.Terminated;
+import io.hektor.core.LifecycleEvent;
+import io.hektor.core.internal.messages.Start;
 import io.hektor.core.internal.messages.Stop;
+import io.hektor.core.internal.messages.Watch;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
@@ -24,20 +27,22 @@ public class InvokeActorTask implements Runnable {
     private final ActorRef receiver;
     private final Object msg;
     private final InternalHektor hektor;
+    private final CompletableFuture<Object> askFuture;
 
-    public static InvokeActorTask create(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg) {
+    public static InvokeActorTask create(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg, CompletableFuture<Object> askFuture) {
         assertNotNull(hektor);
         assertNotNull(sender);
         assertNotNull(receiver);
         assertNotNull(msg);
-        return new InvokeActorTask(hektor, sender, receiver, msg);
+        return new InvokeActorTask(hektor, sender, receiver, msg, askFuture);
     }
 
-    private InvokeActorTask(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg) {
+    private InvokeActorTask(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg, CompletableFuture<Object> askFuture) {
         this.hektor = hektor;
         this.sender = sender;
         this.receiver = receiver;
         this.msg = msg;
+        this.askFuture = askFuture;
     }
 
     private Optional<DefaultActorContext> invokeActor(final ActorBox box) {
@@ -45,7 +50,11 @@ public class InvokeActorTask implements Runnable {
         try {
             // final BufferingActorContext ctx = new BufferingActorContext(hektor, box, sender);
             Actor._ctx.set(ctx);
-            box.actor().onReceive(msg);
+            if (msg == Start.MSG) {
+                box.actor().start();
+            } else {
+                box.actor().onReceive(msg);
+            }
 
             return Optional.of(ctx);
         } catch (final Throwable t) {
@@ -101,8 +110,12 @@ public class InvokeActorTask implements Runnable {
         box.actor().postStop();
         final ActorPath me = receiver.path();
         me.parent().ifPresent(parentPath -> {
-            hektor.lookup(parentPath).ifPresent(parent -> parent.tell(Terminated.of(me), receiver));
+            final Terminated terminated = Terminated.of(me);
+            hektor.lookup(parentPath).ifPresent(parent -> parent.tell(terminated, receiver));
         });
+
+        box.tellWatchers(LifecycleEvent.terminated(receiver));
+
     }
 
     @Override
@@ -122,6 +135,8 @@ public class InvokeActorTask implements Runnable {
             processStoppedChild(box, ((Terminated) msg));
         } else if (msg == Stop.MSG) {
             box.stop();
+        } else if (msg == Watch.MSG) {
+            box.watch(sender);
         } else if (!isStopping) {
             // if we are not already in stopping state then
             // process the msg. Remember, when an actor has
@@ -129,9 +144,18 @@ public class InvokeActorTask implements Runnable {
             // any new messages.
             final Optional<DefaultActorContext> ctx = invokeActor(box);
 
+            if (askFuture != null && !ctx.isPresent()) {
+                askFuture.complete(null);
+            }
+
             ctx.ifPresent(c -> {
-                c.bufferedMessages().stream().forEach(e ->
-                        e.receiver().tell(Priority.HIGH, e.message(), e.sender()));
+                c.bufferedMessages().stream().forEach(e -> {
+                    if (askFuture != null && e.receiver().equals(sender)) {
+                        askFuture.complete(e.message());
+                    } else {
+                        e.receiver().tell(Priority.HIGH, e.message(), e.sender());
+                    }
+                });
 
                 if (c.isStopped()) {
                     box.stop();

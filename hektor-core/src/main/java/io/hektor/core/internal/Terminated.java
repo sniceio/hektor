@@ -1,4 +1,6 @@
-package io.hektor.core;
+package io.hektor.core.internal;
+
+import io.hektor.core.ActorPath;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 

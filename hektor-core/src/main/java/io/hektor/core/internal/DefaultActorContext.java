@@ -9,6 +9,8 @@ import io.hektor.core.Scheduler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
@@ -39,6 +41,13 @@ public class DefaultActorContext implements ActorContext {
         bufferedMessages.add(envelope);
     }
 
+    public CompletionStage<Object> ask(final Object msg, final ActorRef receiver) {
+        final CompletableFuture<Object> future = new CompletableFuture<>();
+        final Envelope envelope = new Envelope(Priority.NORMAL, ActorRef.None(), receiver, msg, future);
+        bufferedMessages.add(envelope);
+        return future;
+    }
+
     public List<Envelope> bufferedMessages() {
         return bufferedMessages;
     }
@@ -67,7 +76,12 @@ public class DefaultActorContext implements ActorContext {
     @Override
     public Optional<ActorRef> lookup(final String path) {
         final ActorPath actorPath = DefaultActorPath.create(self.ref().path(), path);
-        return hektor.lookupActorBox(actorPath).map(ActorBox::ref);
+        return lookup(actorPath);
+    }
+
+    @Override
+    public Optional<ActorRef> lookup(final ActorPath path) {
+        return hektor.lookupActorBox(path).map(ActorBox::ref);
     }
 
     @Override

@@ -3,10 +3,18 @@ package io.hektor.core.internal;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
 import io.hektor.core.internal.messages.Stop;
+import io.hektor.core.internal.messages.Watch;
+import io.netty.util.internal.ConcurrentSet;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -37,6 +45,11 @@ public class ActorBox {
      */
     private final Map<String, ActorRef> children = new HashMap<>();
 
+    /**
+     * A list of other actors that is monitoring this one for life-cycle events.
+     */
+    private Set<ActorRef> watchers;
+
     private ActorBox(final MailBox mailBox, final Actor actor, final ActorRef ref) {
         this.mailBox = mailBox;
         this.actor = actor;
@@ -45,6 +58,19 @@ public class ActorBox {
 
     public static ActorBox create(final MailBox mailBox, final Actor actor, final ActorRef ref) {
         return new ActorBox(mailBox, actor, ref);
+    }
+
+    public void tellWatchers(final Object msg) {
+        System.err.println(ref + " telling all watchers: " + msg);
+        if (watchers == null) {
+            return;
+        }
+
+        watchers.forEach(watcher -> {
+            System.err.println("telling " + watcher + " that I dided");
+            watcher.tell(msg, ref);
+        });
+
     }
 
     /**
@@ -58,8 +84,6 @@ public class ActorBox {
 
     /**
      * Send a stop message to all our children (if any)
-     *
-     * @return the number of children that we had and is now asked to stop
      */
     public void stopChildren() {
         children.values().forEach(child -> child.tell(Stop.MSG, ref));
@@ -83,6 +107,13 @@ public class ActorBox {
     public int removeChild(final String name) {
         children.remove(name);
         return children.size();
+    }
+
+    public void watch(final ActorRef watcher) {
+        if (watchers == null) {
+            watchers = new HashSet<>();
+        }
+        watchers.add(watcher);
     }
 
     public boolean hasNoChildren() {

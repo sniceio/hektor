@@ -5,6 +5,10 @@ import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
+import io.hektor.core.internal.messages.Watch;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -33,7 +37,7 @@ public class DefaultActorRef implements ActorRef {
         final ActorContext ctx = Actor._ctx.get();
         if (ctx != null) {
             try {
-                final DefaultActorContext bufCtx = (DefaultActorContext)ctx;
+                final DefaultActorContext bufCtx = (DefaultActorContext) ctx;
                 bufCtx.buffer(msg, this, sender);
             } catch (final ClassCastException e) {
                 // ignore. shouldn't happen but if it does
@@ -46,6 +50,20 @@ public class DefaultActorRef implements ActorRef {
     }
 
     @Override
+    public CompletionStage<Object> ask(final Object msg, final ActorRef asker) {
+        final ActorContext ctx = Actor._ctx.get();
+        try {
+            if (ctx != null) {
+                return ((DefaultActorContext) ctx).ask(msg, this);
+            }
+        } catch (final ClassCastException e) {
+            // odd, should have been a DefaultActorContext...
+        }
+
+        return dispatcher.ask(asker, this, msg);
+    }
+
+    @Override
     public void tell(Priority priority, Object msg, ActorRef sender) {
         tell(msg, sender);
     }
@@ -53,6 +71,11 @@ public class DefaultActorRef implements ActorRef {
     @Override
     public void tellAnonymously(final Object msg) {
         dispatcher.dispatch(ActorRef.None(), this, msg);
+    }
+
+    @Override
+    public void monitor(final ActorRef ref) {
+        dispatcher.dispatch(this, ref, Watch.MSG);
     }
 
     @Override

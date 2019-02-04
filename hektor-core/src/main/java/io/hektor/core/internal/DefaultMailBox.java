@@ -21,6 +21,9 @@ public class DefaultMailBox implements MailBox {
 
     @Override
     public synchronized void offer(final Envelope envelope) {
+        if (envelope.isAsk()) {
+            System.err.println("=====================");
+        }
         messages.offer(envelope);
     }
 }

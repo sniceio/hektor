@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -120,10 +121,15 @@ public class DefaultDispatcher2 implements InternalDispatcher {
 
         final BlockingQueue<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
         // final BlockingDeque<Runnable> queue = workerQueue[Math.abs(receiver.path().hashCode()) % noOfWorkers];
-        final InvokeActorTask task = InvokeActorTask.create(hektor, sender, receiver, msg);
+        final InvokeActorTask task = InvokeActorTask.create(hektor, sender, receiver, msg, null);
         if (!queue.offer(task)) {
             System.err.println("oh man, queue is full");
         }
+    }
+
+    @Override
+    public CompletableFuture<Object> ask(ActorRef sender, ActorRef receiver, Object msg) throws IllegalArgumentException {
+        throw new RuntimeException("Not implemenented");
     }
 
     private static class Worker implements Runnable {

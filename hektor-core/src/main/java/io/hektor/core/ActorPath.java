@@ -23,6 +23,19 @@ public interface ActorPath {
         return !parent().isPresent();
     }
 
+    /**
+     * Will traverse up the tree of paths to get the top-root.
+     *
+     * @return
+     */
+    default ActorPath getRoot() {
+        if (parent().isPresent()) {
+            return parent().get().getRoot();
+        }
+
+        return this;
+    }
+
     default ActorPath createChild(final String name) {
         return new DefaultActorPath(this, name);
     }

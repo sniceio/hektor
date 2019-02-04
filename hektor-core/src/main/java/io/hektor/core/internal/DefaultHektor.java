@@ -8,10 +8,15 @@ import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
 import io.hektor.core.RoutingLogic;
 import io.hektor.core.Scheduler;
+import io.hektor.core.internal.messages.Start;
+import io.hektor.core.internal.messages.Stop;
+import io.hektor.core.internal.messages.Watch;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * The default implementation of Hektor.
@@ -59,8 +64,7 @@ public final class DefaultHektor implements InternalHektor {
 
         final ActorContext oldCtx = Actor._ctx.get();
         try {
-            System.err.println("Constructing a new Actor of name: " + name);
-            final ActorContext ctx = new ConstructorActorContext(ref);
+            final ActorContext ctx = new ConstructorActorContext(this, ref);
             Actor._ctx.set(ctx);
             final Actor actor = ReflectionHelper.constructActor(props);
             dispatcher.register(ref, actor);
@@ -68,6 +72,7 @@ public final class DefaultHektor implements InternalHektor {
             Actor._ctx.set(oldCtx);
         }
 
+        ref.tell(Priority.HIGH, Start.MSG, ref);
         return ref;
     }
 
@@ -92,6 +97,17 @@ public final class DefaultHektor implements InternalHektor {
     }
 
     @Override
+    public boolean watch(final ActorRef watcher, final ActorRef target) {
+        final Optional<ActorBox> box = actorStore.lookup(target);
+        if (box.isPresent()) {
+            return false;
+        }
+
+        watcher.tell(Watch.MSG, target);
+        return true;
+    }
+
+    @Override
     public Optional<ActorRef> lookup(final String path) throws IllegalArgumentException {
         return lookupActorBox(path).map(ActorBox::ref);
     }
@@ -104,6 +120,12 @@ public final class DefaultHektor implements InternalHektor {
     @Override
     public RouterBuilder routerWithName(final String name) {
         return new Builder(root, name);
+    }
+
+    @Override
+    public CompletionStage<Void> terminate() {
+        final CompletableFuture<Void> future = new CompletableFuture<>();
+        return future;
     }
 
     /**
@@ -180,6 +202,11 @@ public final class DefaultHektor implements InternalHektor {
         }
 
         @Override
+        public CompletionStage<Object> ask(final Object msg, final ActorRef sender) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
         public void tell(final Priority priority, final Object msg, final ActorRef sender) {
             final ActorRef receiver = routingLogic.select(msg, actors);
             receiver.tell(priority, msg, sender);
@@ -190,6 +217,11 @@ public final class DefaultHektor implements InternalHektor {
         public void tellAnonymously(final Object msg) {
             final ActorRef receiver = routingLogic.select(msg, actors);
             receiver.tellAnonymously(msg);
+        }
+
+        @Override
+        public void monitor(ActorRef ref) {
+            throw new RuntimeException("Sorry, not implemented just yet");
         }
 
     }

@@ -4,8 +4,13 @@ import io.hektor.core.Actor;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -36,4 +41,5 @@ public class SimpleActorStore implements ActorStore {
     public Optional<ActorBox> remove(final ActorRef ref) {
         return Optional.ofNullable(actors.remove(ref.path()));
     }
+
 }

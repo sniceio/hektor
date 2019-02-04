@@ -1,5 +1,7 @@
 package io.hektor.core;
 
+import io.hektor.core.internal.Terminated;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;

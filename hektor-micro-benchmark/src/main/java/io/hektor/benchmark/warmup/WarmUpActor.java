@@ -17,6 +17,10 @@ public class WarmUpActor implements Actor {
 
     private final CountDownLatch postStopLatch;
 
+    public static Props props(final CountDownLatch latch) {
+        return Props.forActor(WarmUpActor.class, () -> new WarmUpActor(latch));
+    }
+
     public WarmUpActor(final CountDownLatch postStopLatch) {
         // because we can
         me = ctx().self();
@@ -35,7 +39,7 @@ public class WarmUpActor implements Actor {
             ctx().stop();
         } else if (msg instanceof CreateChild) {
             final String name = ((CreateChild) msg).child;
-            ctx().actorOf(name, Props.forActor(WarmUpActor.class).build());
+            ctx().actorOf(name, props(postStopLatch));
         }
     }
 }
