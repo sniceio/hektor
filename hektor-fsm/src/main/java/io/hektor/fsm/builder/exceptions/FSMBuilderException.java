@@ -1,4 +1,4 @@
-package io.hektor.fsm.builder;
+package io.hektor.fsm.builder.exceptions;
 
 /**
  * @author jonas@jonasborjesson.com

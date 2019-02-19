@@ -1,4 +1,4 @@
-package io.hektor.fsm.builder;
+package io.hektor.fsm.builder.exceptions;
 
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;

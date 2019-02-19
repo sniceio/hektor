@@ -4,10 +4,17 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;
+import io.hektor.fsm.builder.exceptions.DefaultTransitionAlreadySpecifiedException;
+import io.hektor.fsm.builder.exceptions.FinalStateIsTransientException;
+import io.hektor.fsm.builder.exceptions.FinalStateTransitionsException;
+import io.hektor.fsm.builder.exceptions.TransientLoopDetectedException;
+import io.hektor.fsm.builder.exceptions.TransientStateMissingTransitionException;
+import io.hektor.fsm.builder.exceptions.TransitionMissingException;
 import io.hektor.fsm.impl.StateImpl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -22,11 +29,28 @@ public class StateBuilder<S extends Enum<S>, C extends Context, D extends Data> 
 
     private final List<TransitionBuilder<?, S, C, D>> transitions = new ArrayList<>();
 
+    /**
+     * There must be a default transition defined, which is a transition that
+     * accepts any event and has no guards. I.e., it is guaranteed it will
+     * be executed, which is necessary for transition states.
+     */
+    private TransitionBuilder<Object, S, C, D> defaultTransition;
+
     private BiConsumer<C, D> enterAction;
     private BiConsumer<C, D> exitAction;
 
+    /**
+     * Whether or not this is a transient state.
+     */
+    private final boolean isTransient;
+
     public StateBuilder(final S state) {
+        this(state, false);
+    }
+
+    public StateBuilder(final S state, final boolean isTransient) {
         this.state = state;
+        this.isTransient = isTransient;
     }
 
     public S getState() {
@@ -77,25 +101,63 @@ public class StateBuilder<S extends Enum<S>, C extends Context, D extends Data> 
 
             @Override
             public <E> TransitionBuilder<E, S, C, D> onEvent(final Class<E> event) {
+                ensureTransientTransition(state);
                 final TransitionBuilder<E, S, C, D> builder = new TransitionBuilder<>(state, event);
                 transitions.add(builder);
+                return builder;
+            }
+
+            @Override
+            public DefaultTransitionBuilder<Object, S, C, D> asDefaultTransition() {
+                if (defaultTransition != null) {
+                    throw new DefaultTransitionAlreadySpecifiedException(state);
+                }
+
+                ensureTransientTransition(state);
+
+                final TransitionBuilder<Object, S, C, D> builder = new TransitionBuilder<>(state, Object.class, true);
+                defaultTransition = builder;
                 return builder;
             }
         };
     }
 
+    /**
+     * A transient state cannot transition back to itself since, most likely, a loop will occur.
+     * One could perhaps mutate some state on the action associated with the transition and as
+     * such break the loop but it's too hard to figure out so for now, thiis is not allowed.
+     *
+     * @param toState
+     */
+    private void ensureTransientTransition(final S toState) {
+        if (isTransient && state == toState) {
+            throw new TransientLoopDetectedException(state);
+        }
+    }
+
     public State build() {
 
         if (isFinalState && !transitions.isEmpty()) {
-            throw new StateBuilderException(state, "A final state cannot have transitions");
+            throw new FinalStateTransitionsException(state);
         }
 
-        if (!isFinalState && transitions.isEmpty()) {
-            throw new StateBuilderException(state, "You must specify at least one transition for non-final states");
+        if (!isFinalState && transitions.isEmpty() && defaultTransition == null) {
+            throw new TransitionMissingException(state);
+        }
+
+        // you shouldn't be able to specify this but in case we introduce a bug
+        // that breaks the builder pattern
+        if (isFinalState && isTransient) {
+            throw new FinalStateIsTransientException(state);
+        }
+
+        if (isTransient && defaultTransition == null) {
+            throw new TransientStateMissingTransitionException(state);
         }
 
         final List<Transition<?, S, C, D>> ts = transitions.stream().map(TransitionBuilder::build).collect(Collectors.toList());
-        return new StateImpl(state, isInitialState, isFinalState, ts, enterAction, exitAction);
+        final Optional<Transition<Object, S, C, D>> defaultTs = Optional.ofNullable(defaultTransition == null ? null : defaultTransition.build());
+        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts, defaultTs, enterAction, exitAction);
     }
 
     public StateBuilder<S, C, D> isInital(final boolean value) {

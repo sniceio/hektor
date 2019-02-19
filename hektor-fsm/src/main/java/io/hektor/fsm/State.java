@@ -24,6 +24,11 @@ public interface State<S extends Enum<S>, C extends Context, D extends Data> {
     boolean isFinal();
 
     /**
+     * Check whether or not this state is a transient state.
+     */
+    boolean isTransient();
+
+    /**
      * See if this {@link State} would accept the given event.
      *
      * @param event the event to see if it is accepted by this state or not.

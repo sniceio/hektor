@@ -1,9 +1,9 @@
 package io.hektor.fsm;
 
 import io.hektor.fsm.builder.FSMBuilder;
-import io.hektor.fsm.builder.FinalStateAlreadyDefinedException;
-import io.hektor.fsm.builder.InitialStateAlreadyDefinedException;
-import io.hektor.fsm.builder.StateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.FinalStateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.InitialStateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.StateAlreadyDefinedException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

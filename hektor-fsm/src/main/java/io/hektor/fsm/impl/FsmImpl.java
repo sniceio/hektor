@@ -1,14 +1,14 @@
 package io.hektor.fsm.impl;
 
-import java.util.Optional;
-import java.util.function.BiConsumer;
-
 import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.FSM;
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;
 import io.hektor.fsm.TransitionListener;
+
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import static io.hektor.fsm.PreConditions.ensureNotNull;
 
@@ -73,7 +73,6 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
 
         // TODO: catch all if action throws exception
         action.ifPresent(a -> a.accept(ctx, data));
-
     }
 
     private void exitCurrentState() {
@@ -86,6 +85,12 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
         final Optional<Transition<Object, S, C, D>> optional = currentState.accept(event);
         if (optional.isPresent()) {
             transition(optional.get(), event);
+
+            // our builders is supposed to guarantee that we don't end up in a loop,
+            // which is a risk with transient states.
+            if (currentState.isTransient()) {
+                onEvent(event);
+            }
         } else {
             if (unhandledEventHandler != null) {
                 unhandledEventHandler.accept((S) currentState.getState(), event);

@@ -1,7 +1,7 @@
 package io.hektor.fsm;
 
 import io.hektor.fsm.builder.StateBuilder;
-import io.hektor.fsm.builder.StateBuilderException;
+import io.hektor.fsm.builder.exceptions.StateBuilderException;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;

@@ -4,6 +4,10 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.Definition;
 import io.hektor.fsm.State;
+import io.hektor.fsm.builder.exceptions.FSMBuilderException;
+import io.hektor.fsm.builder.exceptions.FinalStateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.InitialStateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.StateAlreadyDefinedException;
 import io.hektor.fsm.impl.DefinitionImpl;
 
 import java.util.Arrays;
@@ -24,7 +28,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
             throw new InitialStateAlreadyDefinedException(state);
         }
 
-        final StateBuilder<S, C, D> builder = withState(state);
+        final StateBuilder<S, C, D> builder = defineState(state, false);
         builder.isInital(true);
         return builder;
     }
@@ -33,7 +37,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         if (hasFinalState()) {
             throw new FinalStateAlreadyDefinedException(state);
         }
-        final StateBuilder<S, C, D> builder = withState(state);
+        final StateBuilder<S, C, D> builder = defineState(state, false);
         builder.isFinal(true);
         return builder;
     }
@@ -47,7 +51,15 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
     }
 
     public StateBuilder<S, C, D> withState(final S state) throws StateAlreadyDefinedException {
-        final StateBuilder<S, C, D> builder = new StateBuilder<>(state);
+        return defineState(state, false);
+    }
+
+    public StateBuilder<S, C, D> withTransientState(final S state) throws StateAlreadyDefinedException {
+        return defineState(state, true);
+    }
+
+    private StateBuilder<S, C, D> defineState(final S state, final boolean isTransient) throws StateAlreadyDefinedException {
+        final StateBuilder<S, C, D> builder = new StateBuilder<>(state, isTransient);
         if (states[state.ordinal()] != null) {
             throw new StateAlreadyDefinedException(state);
         }
@@ -73,6 +85,9 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
 
         // TODO: need to check so that all transitions are going
         // to states that actually exists.
+
+        // TODO: check so that no transient state has a direct transition to another transient state.
+        // this is currently not allowed
 
         return new DefinitionImpl(states);
     }

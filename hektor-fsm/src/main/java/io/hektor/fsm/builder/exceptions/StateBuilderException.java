@@ -1,4 +1,4 @@
-package io.hektor.fsm.builder;
+package io.hektor.fsm.builder.exceptions;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -10,7 +10,7 @@ public class StateBuilderException extends FSMBuilderException {
         this.state = state;
     }
 
-    public StateBuilderException(final Enum state, String message) {
+    public StateBuilderException(final Enum state, final String message) {
         super(message);
         this.state = state;
     }
