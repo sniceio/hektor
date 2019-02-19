@@ -67,9 +67,7 @@ public class TestDefineFSM {
     }
 
     @Test
-    public void testDefineSimpleStateMachime() {
-
+    public void testDefineSimpleStateMachine() {
         builder.withInitialState(INIT);
-
     }
 }

@@ -52,7 +52,7 @@ public class StateTests {
      * You must specify transitions for non-final states.
      */
     @Test(expected = StateBuilderException.class)
-    public void testeMissingTransitions() {
+    public void testMissingTransitions() {
         new StateBuilder(INIT).build();
     }
 
