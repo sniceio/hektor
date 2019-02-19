@@ -1,14 +1,17 @@
 package io.hektor.fsm;
 
 import io.hektor.fsm.builder.FSMBuilder;
+import io.hektor.fsm.builder.StateBuilder;
 import io.hektor.fsm.builder.exceptions.FinalStateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.InitialStateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.StateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.StateNotDefinedException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import static io.hektor.fsm.SimpleFsmStates.DEAD;
+import static io.hektor.fsm.SimpleFsmStates.DONE;
 import static io.hektor.fsm.SimpleFsmStates.INIT;
 import static io.hektor.fsm.SimpleFsmStates.WORKING;
 
@@ -64,6 +67,23 @@ public class TestDefineFSM {
         } catch (final FinalStateAlreadyDefinedException e) {
             // TODO: check so that the correct state is in the exception
         }
+    }
+
+    /**
+     * You could define a transition from A to B but then not actually define B. This
+     * should be detected and the building of the FSM should fail.
+     */
+    @Test(expected = StateNotDefinedException.class)
+    public void testTransitionToUnDefinedState() {
+        final StateBuilder<SimpleFsmStates, Context, Data> init = builder.withInitialState(INIT);
+        final StateBuilder<SimpleFsmStates, Context, Data> working = builder.withState(WORKING);
+        builder.withFinalState(DEAD);
+
+        init.transitionTo(WORKING).asDefaultTransition();
+
+        // this should then eventually fail when building the FSM
+        working.transitionTo(DONE).onEvent(String.class);
+        builder.build();
     }
 
     @Test

@@ -5,6 +5,8 @@ import io.hektor.fsm.Data;
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -24,6 +26,8 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     private final Optional<BiConsumer<C, D>> enterAction;
     private final Optional<BiConsumer<C, D>> exitAction;
 
+    private final List<S> connectedNodes = new ArrayList<>();
+
     public StateImpl(final S state,
                      final boolean isInitial,
                      final boolean isFinal,
@@ -40,6 +44,29 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
         this.defaultTransition = defaultTransition;
         this.enterAction = Optional.ofNullable(enterAction);
         this.exitAction = Optional.ofNullable(exitAction);
+
+        transitions.forEach(this::markConnectedNode);
+        markConnectedNode(defaultTransition.orElse(null));
+    }
+
+    /**
+     * We need to keep track of what other states we are connected to because when
+     * we validate the FSM upon build time, there are certain transitions that isn't
+     * allowed.
+     *
+     * Note that this only happens when you build the FSM, which you will only really do
+     * once (so don't confuse this with instantiating the FSM)
+     * @param transition
+     */
+    private void markConnectedNode(final Transition<?, S, C, D> transition) {
+        if (transition == null) {
+            return;
+        }
+
+        final S toState = transition.getToState();
+        if (!connectedNodes.contains(toState)) {
+            connectedNodes.add(toState);
+        }
     }
 
     @Override
@@ -70,6 +97,11 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     @Override
     public boolean isTransient() {
         return isTransient;
+    }
+
+    @Override
+    public List<S> getConnectedNodes() {
+        return Collections.unmodifiableList(connectedNodes);
     }
 
     @Override

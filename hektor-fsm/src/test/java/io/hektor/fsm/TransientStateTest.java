@@ -91,6 +91,31 @@ public class TransientStateTest {
         b.transitionTo(SuperSimpleStates.B).asDefaultTransition();
     }
 
+    /**
+     * This one is a little trickier because we transitions
+     * from B to C, which are both transient states, which
+     * currently isn't allowed.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testTransientStateLoopBtoC() throws Exception {
+        a.transitionTo(SuperSimpleStates.B).onEvent(String.class);
+        b = builder.withTransientState(SuperSimpleStates.B);
+        c = builder.withTransientState(SuperSimpleStates.C);
+
+        // Note that this doesn't fail at this point in time because
+        // the state C may not even have been defined yet, which is why
+        // we're just using enums here. Which of course means we cannot
+        // check certain things at this stage.
+        b.transitionTo(SuperSimpleStates.C).asDefaultTransition();
+
+        c.transitionTo(SuperSimpleStates.H).asDefaultTransition();
+
+        // but when we build the entier FSM we'll be able to figure it out.
+        ensureBuildFsmFails(TransientLoopDetectedException.class);
+    }
+
     private void ensureBuildFsmFails(final Class<? extends Throwable> expectedException) throws Exception {
         try {
             build();
