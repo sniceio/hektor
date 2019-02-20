@@ -1,4 +1,4 @@
-package io.hektor.fsm.builder;
+package io.hektor.fsm.builder.exceptions;
 
 /**
  * Indicates that you tried to define a final state twice.
