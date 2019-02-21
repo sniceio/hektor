@@ -1,6 +1,7 @@
 package io.hektor.actors.io;
 
 import io.snice.buffer.Buffer;
+import io.snice.buffer.Buffers;
 
 import java.io.InputStream;
 
@@ -15,6 +16,11 @@ public interface StreamToken {
     static StreamToken of(final Buffer buffer) {
         assertNotNull(buffer, "The buffer cannot be null");
         return new DefaultStreamToken(buffer);
+    }
+
+    static StreamToken of(final String buffer) {
+        assertNotNull(buffer, "The buffer cannot be null");
+        return new DefaultStreamToken(Buffers.wrap(buffer));
     }
 
     /**
