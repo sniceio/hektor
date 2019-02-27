@@ -24,10 +24,10 @@ public class TransitionTests {
 
         assertThat(transition.getToState(), is(DONE));
 
-        assertThat(transition.match("hello world"), is(true));
+        assertThat(transition.match("hello world", null, null), is(true));
 
-        assertThat(transition.match(12), is(false));
-        assertThat(transition.match(new Object()), is(false));
+        assertThat(transition.match(12, null, null), is(false));
+        assertThat(transition.match(new Object(), null, null), is(false));
     }
 
     /**
@@ -100,10 +100,10 @@ public class TransitionTests {
         final Transition<String, SimpleFsmStates, Context, Data> transition =
                 new TransitionImpl<>("Testing transition",  DONE, String.class, guard, null, null, null);
 
-        assertThat(transition.match("Hello World"), is(true));
+        assertThat(transition.match("Hello World", null, null), is(true));
 
         // wrong case
-        assertThat(transition.match("Hello world"), is(false));
+        assertThat(transition.match("Hello world", null, null), is(false));
     }
 
 }

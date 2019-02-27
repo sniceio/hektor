@@ -49,7 +49,7 @@ public interface State<S extends Enum<S>, C extends Context, D extends Data> {
      * that ultimatelely was the one accepting the event will be returned. If not, an empty
      * {@link Optional} will be returned.
      */
-    Optional<Transition<? extends Object, S, C, D>> accept(Object event);
+    Optional<Transition<? extends Object, S, C, D>> accept(Object event, C ctx, D data);
 
     Optional<BiConsumer<C, D>> getEnterAction();
 

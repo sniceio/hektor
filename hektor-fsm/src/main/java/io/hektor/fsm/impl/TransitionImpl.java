@@ -51,13 +51,17 @@ public class TransitionImpl<E, S extends Enum<S>, C extends Context, D extends D
         this.statefulAction = Optional.ofNullable(statefulAction);
     }
 
-    public boolean match(final Object event) {
+    public boolean match(final Object event, final C ctx, final D data) {
         if (!this.event.isAssignableFrom(event.getClass())) {
             return false;
         }
 
         if (guard != null) {
             return guard.test((E)event);
+        }
+
+        if (richerGuard != null) {
+            return richerGuard.test((E)event, ctx, data);
         }
 
         return true;

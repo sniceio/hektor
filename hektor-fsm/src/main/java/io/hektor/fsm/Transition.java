@@ -24,7 +24,7 @@ public interface Transition<E, S extends Enum<S>, C extends Context, D extends D
      * @param event the event to match agianst this transition.
      * @return true if the event indeed matches, false otherwise.
      */
-    boolean match(Object event);
+    boolean match(Object event, C ctx, D data);
 
     /**
      * This {@link Transition} represents the transition to

@@ -29,9 +29,9 @@ public class StateTests {
         final State init = builder.build();
         assertThat(init.getState(), is(INIT));
 
-        assertThat(init.accept("doesnt match").isPresent(), is(false));
-        assertThat(init.accept(new Object()).isPresent(), is(false));
-        assertThat(init.accept(helloLatch).isPresent(), is(false));
+        assertThat(init.accept("doesnt match", null, null).isPresent(), is(false));
+        assertThat(init.accept(new Object(), null, null).isPresent(), is(false));
+        assertThat(init.accept(helloLatch, null, null).isPresent(), is(false));
 
         acceptAndExecuteAction(init, "Hello");
         assertThat(helloLatch.getCount(), is(0L));
@@ -72,7 +72,7 @@ public class StateTests {
      * You will blow up if none of the above is true.
      */
     private void acceptAndExecuteAction(final State state, final Object event) {
-        final Transition<Object, SimpleFsmStates, Context, Data> transition = ((Transition<Object, SimpleFsmStates, Context, Data>)state.accept(event).get());
+        final Transition<Object, SimpleFsmStates, Context, Data> transition = ((Transition<Object, SimpleFsmStates, Context, Data>)state.accept(event, null, null).get());
         transition.getAction().get().accept(event);
     }
 }

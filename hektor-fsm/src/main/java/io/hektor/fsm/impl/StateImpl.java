@@ -105,8 +105,8 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     }
 
     @Override
-    public Optional<Transition<? extends Object, S, C, D>> accept(final Object event) {
-        final Optional<Transition<? extends Object, S, C, D>> optional = transitions.stream().filter(t -> t.match(event)).findFirst();
+    public Optional<Transition<? extends Object, S, C, D>> accept(final Object event, final C ctx, final D data) {
+        final Optional<Transition<? extends Object, S, C, D>> optional = transitions.stream().filter(t -> t.match(event, ctx, data)).findFirst();
         if (optional.isPresent()) {
             return optional;
         }

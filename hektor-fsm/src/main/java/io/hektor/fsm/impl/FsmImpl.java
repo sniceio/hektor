@@ -82,7 +82,7 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
 
     @Override
     public final void onEvent(final Object event) {
-        final Optional<Transition<Object, S, C, D>> optional = currentState.accept(event);
+        final Optional<Transition<Object, S, C, D>> optional = currentState.accept(event, ctx, data);
         if (optional.isPresent()) {
             transition(optional.get(), event);
 
