@@ -1,7 +1,7 @@
 package io.hektor.actors;
 
 
-public enum AlertCode {
+public enum AlertCode implements Alert {
 
     GENERIC_ERROR(1000,"{} Blah blah blah {}");
 
@@ -13,10 +13,12 @@ public enum AlertCode {
         this.msg = msg;
     }
 
+    @Override
     public String getMessage() {
         return msg;
     }
 
+    @Override
     public int getCode() {
         return code;
     }

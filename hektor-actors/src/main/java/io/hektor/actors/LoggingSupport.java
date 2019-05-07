@@ -16,15 +16,15 @@ public interface LoggingSupport {
         getLogger().info("[{}] " + msg, mergeArgs(args));
     }
 
-    default void logInfo(final AlertCode alert, final Object... args) {
+    default void logInfo(final Alert alert, final Object... args) {
         log(getLogger()::info, alert, args);
     }
 
-    default void logWarn(final AlertCode alert, final Object... args) {
+    default void logWarn(final Alert alert, final Object... args) {
         log(getLogger()::warn, alert, args);
     }
 
-    default void logError(final AlertCode alert, final Object... args) {
+    default void logError(final Alert alert, final Object... args) {
         log(getLogger()::error, alert, args);
     }
 
@@ -37,7 +37,7 @@ public interface LoggingSupport {
      * @param alert
      * @param args
      */
-    default void log(final LogReportFunction reporter, final AlertCode alert, final Object... args) {
+    default void log(final LogReportFunction reporter, final Alert alert, final Object... args) {
         final String logMsg = "AlertCode:{} [{}] " + alert.getMessage();
         reporter.apply(logMsg, mergeArgs(alert, args));
     }

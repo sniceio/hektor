@@ -115,7 +115,18 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
                 }
 
                 if (state.isTransient() && toState.isTransient()) {
-                    throw new TransientLoopDetectedException(state.getState());
+
+                    // ok, definitely forbidden. A transient goes back to itself so
+                    // very likely be a loop
+                    if (state.equals(toState)) {
+                        throw new TransientLoopDetectedException(state.getState());
+                    }
+
+                    // TODO: we need to be able to detect if three transient states
+                    // are connected. E.g., transient states A, B, C are connected
+                    // A -> B -> C -> A then that could potentially be bad.
+                    // probably need to build a graph and to some graph analysis
+                    // on it...
                 }
             });
         }
