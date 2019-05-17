@@ -44,7 +44,7 @@ public class TransientStateTest {
     public void setUp() {
         builder = FSM.of(SuperSimpleStates.class).ofContextType(Context.class).withDataType(Data.class);
 
-        // for simplicity sake, all our unit tests will have the intial state set as A and
+        // for simplicity sake, all our unit tests will have the initial state set as A and
         // the final state as H.
         a = builder.withInitialState(SuperSimpleStates.A);
         h = builder.withFinalState(SuperSimpleStates.H);

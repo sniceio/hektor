@@ -42,7 +42,7 @@ public interface LoggingSupport {
         reporter.apply(logMsg, mergeArgs(alert, args));
     }
 
-    default Object[] mergeArgs(final AlertCode alert, final Object... args) {
+    default Object[] mergeArgs(final Alert alert, final Object... args) {
         final Object[] merged = new Object[2 + (args != null ? args.length : 0)];
         merged[0] = alert.getCode();
         merged[1] = getUUID();
