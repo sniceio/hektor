@@ -1,8 +1,11 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.ActorPath;
+import io.snice.preconditions.PreConditions;
 
 import java.util.Optional;
+
+import static io.snice.preconditions.PreConditions.assertNotEmpty;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -37,6 +40,7 @@ public class DefaultActorPath implements ActorPath {
      * @return
      */
     public static ActorPath create(final ActorPath parent, final String path) {
+        assertNotEmpty(path, "The path cannot be null or the empty string");
         ActorPath current = parent;
         int start = 0;
         int stop = 0;

@@ -9,6 +9,10 @@ import java.util.Optional;
  */
 public interface ActorPath {
 
+    static ActorPath of(final String path) {
+        return DefaultActorPath.create(null, path);
+    }
+
     /**
      * The parent that may be non-existing in which case this is a root
      * path.
