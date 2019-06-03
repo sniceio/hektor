@@ -29,7 +29,7 @@ public class InvokeActorTask implements Runnable {
     private final InternalHektor hektor;
     private final CompletableFuture<Object> askFuture;
 
-    public static InvokeActorTask create(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg, CompletableFuture<Object> askFuture) {
+    public static InvokeActorTask create(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg, final CompletableFuture<Object> askFuture) {
         assertNotNull(hektor);
         assertNotNull(sender);
         assertNotNull(receiver);
@@ -37,7 +37,7 @@ public class InvokeActorTask implements Runnable {
         return new InvokeActorTask(hektor, sender, receiver, msg, askFuture);
     }
 
-    private InvokeActorTask(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg, CompletableFuture<Object> askFuture) {
+    private InvokeActorTask(final InternalHektor hektor, final ActorRef sender, final ActorRef receiver, final Object msg, final CompletableFuture<Object> askFuture) {
         this.hektor = hektor;
         this.sender = sender;
         this.receiver = receiver;
@@ -48,7 +48,6 @@ public class InvokeActorTask implements Runnable {
     private Optional<DefaultActorContext> invokeActor(final ActorBox box) {
         final DefaultActorContext ctx = new DefaultActorContext(hektor, box, sender);
         try {
-            // final BufferingActorContext ctx = new BufferingActorContext(hektor, box, sender);
             Actor._ctx.set(ctx);
             if (msg == Start.MSG) {
                 box.actor().start();
@@ -73,16 +72,27 @@ public class InvokeActorTask implements Runnable {
      *
      * @param box
      */
-    private void initiateStoppingOfActor(final ActorBox box) {
+    private Optional<DefaultActorContext> initiateStoppingOfActor(final ActorBox box) {
         // TODO: an actor could emit more messages when it is stopped. fix that.
-        box.actor().stop();
+        final DefaultActorContext ctx = new DefaultActorContext(hektor, box, sender);
+        try {
+            Actor._ctx.set(ctx);
+            box.actor().stop();
 
-        if (box.hasNoChildren()) {
-            purgeActor(box);
-        } else {
-            box.stopChildren();
+            if (box.hasNoChildren()) {
+                purgeActor(box);
+            } else {
+                box.stopChildren();
+            }
+
+            return Optional.of(ctx);
+        } catch (final Throwable t) {
+            t.printStackTrace();
+        } finally {
+            Actor._ctx.remove();
         }
 
+        return Optional.empty();
     }
 
     /**
@@ -148,19 +158,8 @@ public class InvokeActorTask implements Runnable {
                 askFuture.complete(null);
             }
 
-            ctx.ifPresent(c -> {
-                c.bufferedMessages().stream().forEach(e -> {
-                    if (askFuture != null && e.receiver().equals(sender)) {
-                        askFuture.complete(e.message());
-                    } else {
-                        e.receiver().tell(Priority.HIGH, e.message(), e.sender());
-                    }
-                });
+            processActorContext(box, ctx);
 
-                if (c.isStopped()) {
-                    box.stop();
-                }
-            });
 
         } else {
             // we received a msg to an actor that is already in the stopping
@@ -169,7 +168,24 @@ public class InvokeActorTask implements Runnable {
 
         // only call stop on the actor once
         if (isStopping ^ box.isStopped()) {
-            initiateStoppingOfActor(box);
+            final Optional<DefaultActorContext> ctx = initiateStoppingOfActor(box);
+            processActorContext(box, ctx);
         }
+    }
+
+    private void processActorContext(final ActorBox box, final Optional<DefaultActorContext> ctx) {
+        ctx.ifPresent(c -> {
+            c.bufferedMessages().stream().forEach(e -> {
+                if (askFuture != null && e.receiver().equals(sender)) {
+                    askFuture.complete(e.message());
+                } else {
+                    e.receiver().tell(Priority.HIGH, e.message(), e.sender());
+                }
+            });
+
+            if (c.isStopped()) {
+                box.stop();
+            }
+        });
     }
 }

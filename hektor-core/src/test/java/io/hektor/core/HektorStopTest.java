@@ -1,19 +1,17 @@
 package io.hektor.core;
 
+import io.hektor.core.ParentActor.StopYourselfMessage;
 import org.junit.Ignore;
 import org.junit.Test;
-import io.hektor.core.ParentActor.CancelScheduledTask;
-import io.hektor.core.ParentActor.CreateChildMessage;
-import io.hektor.core.ParentActor.DummyMessage;
-import io.hektor.core.ParentActor.TimedMessage;
-import org.junit.Test;
 
-import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static io.hektor.core.StoppingActor.StopMessage.postStop;
+import static io.hektor.core.StoppingActor.StopMessage.stop;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -38,7 +36,7 @@ public class HektorStopTest extends HektorTestBase {
         assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(true));
 
         // ask the actor to stop itself.
-        ref.tellAnonymously(new ParentActor.StopYourselfMessage());
+        ref.tellAnonymously(new StopYourselfMessage());
 
         // make sure all the various methods are called, which
         // are controlled by the different latches. Note, we have
@@ -73,5 +71,35 @@ public class HektorStopTest extends HektorTestBase {
         latch001.awaitShutdownLatches();
         latch002.awaitShutdownLatches();
 
+    }
+
+    /**
+     * An actor can still send out messages in its stop method.
+     */
+    @Test
+    public void testSendMsgAtStop() throws Exception {
+        ensureStopMessages(true, "hello");
+        ensureStopMessages(true, "hello", "world");
+
+        ensureStopMessages(false, "should", "be", "poststop");
+    }
+
+    private void ensureStopMessages(final boolean atStop, final String... msgs) throws Exception {
+        final List<Object> cache = new ArrayList<>();
+        final CountDownLatch latch = new CountDownLatch(2);
+        final ActorRef r = defaultHektor.actorOf(CachingActor.props(cache, latch), "caching");
+        final ActorRef s = defaultHektor.actorOf(StoppingActor.props(), "stop");
+
+        Arrays.stream(msgs).forEach(msg -> {
+            s.tell(atStop ? stop(r, msg) : postStop(r, msg));
+        });
+
+        s.tell(new StopYourselfMessage());
+
+        latch.await(500, TimeUnit.MILLISECONDS);
+
+        synchronized (cache) {
+            assertThat(cache, is(Arrays.asList(msgs)));
+        }
     }
 }

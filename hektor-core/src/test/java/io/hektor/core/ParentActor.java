@@ -47,11 +47,11 @@ public class ParentActor implements Actor {
 
     @Override
     public void stop() {
-        stopLatch.countDown();;
+        stopLatch.countDown();
     }
 
     public void postStop() {
-        postStopLatch.countDown();;
+        postStopLatch.countDown();
     }
 
     @Override

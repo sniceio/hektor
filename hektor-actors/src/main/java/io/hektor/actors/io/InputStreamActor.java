@@ -107,12 +107,12 @@ public class InputStreamActor extends SubscriptionManagementSupport implements R
 
     @Override
     public void stop() {
-        // logInfo("Stopping");
+        logInfo("Stopping");
     }
 
     @Override
     public void postStop() {
-        // logInfo("Stopped");
+        logInfo("Stopped");
     }
 
     @Override
