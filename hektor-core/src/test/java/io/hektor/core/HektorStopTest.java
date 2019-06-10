@@ -86,7 +86,7 @@ public class HektorStopTest extends HektorTestBase {
 
     private void ensureStopMessages(final boolean atStop, final String... msgs) throws Exception {
         final List<Object> cache = new ArrayList<>();
-        final CountDownLatch latch = new CountDownLatch(2);
+        final CountDownLatch latch = new CountDownLatch(msgs.length);
         final ActorRef r = defaultHektor.actorOf(CachingActor.props(cache, latch), "caching");
         final ActorRef s = defaultHektor.actorOf(StoppingActor.props(), "stop");
 

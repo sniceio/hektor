@@ -66,7 +66,7 @@ public class ParentActor implements Actor {
         } else if (msg instanceof TimedMessage) {
             final TimedMessage timed = (TimedMessage) msg;
             cancellable = Optional.of(ctx().scheduler().schedule(timed.msg, timed.sender, timed.receiver, timed.delay));
-        } else if (msg instanceof Terminated) {
+        } else if (msg instanceof LifecycleEvent.Terminated) {
             terminatedLatch.countDown();
         } else if (msg instanceof CreateChildMessage) {
             final CreateChildMessage message = (CreateChildMessage) msg;

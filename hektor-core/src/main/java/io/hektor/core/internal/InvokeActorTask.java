@@ -45,7 +45,7 @@ public class InvokeActorTask implements Runnable {
         this.askFuture = askFuture;
     }
 
-    private Optional<DefaultActorContext> invokeActor(final ActorBox box) {
+    private Optional<DefaultActorContext> invokeActor(final ActorBox box, final Object msg) {
         final DefaultActorContext ctx = new DefaultActorContext(hektor, box, sender);
         try {
             Actor._ctx.set(ctx);
@@ -73,7 +73,6 @@ public class InvokeActorTask implements Runnable {
      * @param box
      */
     private Optional<DefaultActorContext> initiateStoppingOfActor(final ActorBox box) {
-        // TODO: an actor could emit more messages when it is stopped. fix that.
         final DefaultActorContext ctx = new DefaultActorContext(hektor, box, sender);
         try {
             Actor._ctx.set(ctx);
@@ -104,9 +103,7 @@ public class InvokeActorTask implements Runnable {
      * @param child
      */
     private void processStoppedChild(final ActorBox box, final Terminated child) {
-        if (box.removeChild(child.actor().name()) == 0) {
-            purgeActor(box);
-        }
+        box.removeChild(child.actor().name());
     }
 
     /**
@@ -124,8 +121,7 @@ public class InvokeActorTask implements Runnable {
             hektor.lookup(parentPath).ifPresent(parent -> parent.tell(terminated, receiver));
         });
 
-        box.tellWatchers(LifecycleEvent.terminated(receiver));
-
+        box.tellWatchers(LifecycleEvent.terminated(me));
     }
 
     @Override
@@ -138,38 +134,39 @@ public class InvokeActorTask implements Runnable {
         final ActorBox box = actorBox.get();
         final boolean isStopping = box.isStopped();
 
-        // handle a stopped child. Remember that the stop message is
-        // ONLY internal to Hektor so we know that is must have been
-        // triggered because we asked the child to stop.
-        if (isStopping && msg instanceof Terminated) {
-            processStoppedChild(box, ((Terminated) msg));
-        } else if (msg == Stop.MSG) {
+        if (msg == Stop.MSG) {
             box.stop();
         } else if (msg == Watch.MSG) {
             box.watch(sender);
-        } else if (!isStopping) {
-            // if we are not already in stopping state then
-            // process the msg. Remember, when an actor has
-            // been asked to stop, it will no longer process
-            // any new messages.
-            final Optional<DefaultActorContext> ctx = invokeActor(box);
+        } else {
+            final Object actualMsg;
+            if (msg instanceof Terminated) {
+                // the Terminated event is an internal event. We'll convert it
+                // to the public {@link LifecycleEvent} before handing it off
+                // to the actor. The reason is we want ot rely on the fact that
+                // no one else can send us the Terminated event.
+                final Terminated term = (Terminated)msg;
+                actualMsg = LifecycleEvent.terminated(term.actor());
+                processStoppedChild(box, term);
+            } else {
+                actualMsg = msg;
+            }
+
+            final Optional<DefaultActorContext> ctx = invokeActor(box, actualMsg);
 
             if (askFuture != null && !ctx.isPresent()) {
                 askFuture.complete(null);
             }
 
             processActorContext(box, ctx);
-
-
-        } else {
-            // we received a msg to an actor that is already in the stopping
-            // phase so we will simply ignore it.
         }
 
         // only call stop on the actor once
         if (isStopping ^ box.isStopped()) {
             final Optional<DefaultActorContext> ctx = initiateStoppingOfActor(box);
             processActorContext(box, ctx);
+        } else if ((isStopping || box.isStopped()) && box.hasNoChildren()) {
+            purgeActor(box);
         }
     }
 

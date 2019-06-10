@@ -3,8 +3,9 @@ package io.hektor.actors.io;
 import io.hektor.actors.LoggingSupport;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorContext;
+import io.hektor.core.ActorRef;
+import io.hektor.core.LifecycleEvent;
 import io.hektor.core.Props;
-import io.hektor.core.internal.Terminated;
 import io.snice.buffer.Buffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class TokenReceiverActor implements LoggingSupport, Actor {
     private final CountDownLatch latch;
     private final InputStream is;
     private final ExecutorService threadPool;
+    private ActorRef myChild;
 
     private final List<Buffer> buffers = new ArrayList<>();
 
@@ -42,7 +44,7 @@ public class TokenReceiverActor implements LoggingSupport, Actor {
     @Override
     public void start() {
         logInfo("Starting");
-        ctx().actorOf("reader", InputStreamActor.props(is, threadPool));
+        myChild = ctx().actorOf("reader", InputStreamActor.props(is, threadPool));
     }
 
     @Override
@@ -52,8 +54,7 @@ public class TokenReceiverActor implements LoggingSupport, Actor {
         if (msg instanceof StreamToken) {
             final StreamToken token = (StreamToken) msg;
             buffers.add(token.getBuffer());
-        } else if (msg instanceof Terminated) {
-            // we just assume it is the death of the InputStreamActor...
+        } else if (msg instanceof LifecycleEvent.Terminated && ((LifecycleEvent.Terminated)msg).isActor(myChild)) {
             latch.countDown();
         } else if ("GiveMeResultPlease".equals(msg.toString()) ) {
             sender().tell(buffers.stream().map(Buffer::toString).collect(Collectors.joining()));

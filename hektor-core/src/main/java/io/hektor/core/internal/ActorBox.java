@@ -61,13 +61,11 @@ public class ActorBox {
     }
 
     public void tellWatchers(final Object msg) {
-        System.err.println(ref + " telling all watchers: " + msg);
         if (watchers == null) {
             return;
         }
 
         watchers.forEach(watcher -> {
-            System.err.println("telling " + watcher + " that I dided");
             watcher.tell(msg, ref);
         });
 
@@ -86,7 +84,9 @@ public class ActorBox {
      * Send a stop message to all our children (if any)
      */
     public void stopChildren() {
-        children.values().forEach(child -> child.tell(Stop.MSG, ref));
+        children.values().forEach(child -> {
+            child.tell(Stop.MSG, ref);
+        });
     }
 
     public void addChild(final String name, final ActorRef ref) {

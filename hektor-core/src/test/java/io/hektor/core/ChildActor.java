@@ -40,21 +40,21 @@ public class ChildActor implements Actor {
                 latch2.countDown();
             }
 
-            DummyMessage dummyMsg = (DummyMessage) msg;
+            final DummyMessage dummyMsg = (DummyMessage) msg;
 
             // if we have a sibling, then say hello... this is just to test
             // so that it is possible to lookup a sibling from the parent ref
             // and issue a message to it...
             if (dummyMsg.sibling != null) {
-                Optional<ActorRef> sibling = ctx().lookup("../" + dummyMsg.sibling);
+                final Optional<ActorRef> sibling = ctx().lookup("../" + dummyMsg.sibling);
                 if (sibling.isPresent()) {
                     sibling.get().tell("hello sibling!", self());
                 }
             }
         } else if (msg instanceof TalkToSiblingMessage){
             // i guess we are supposed to talk to one of our siblings, let's do that!
-            TalkToSiblingMessage talkMsg = (TalkToSiblingMessage)msg;
-            Optional<ActorRef> sibling = ctx().lookup("../" + talkMsg.sibling);
+            final TalkToSiblingMessage talkMsg = (TalkToSiblingMessage)msg;
+            final Optional<ActorRef> sibling = ctx().lookup("../" + talkMsg.sibling);
             sibling.ifPresent(ref -> ref.tell(talkMsg.msg, self()));
         } else if (msg instanceof ParentActor.StopYourselfMessage){
             ctx().stop();
@@ -64,6 +64,8 @@ public class ChildActor implements Actor {
                 sender().tell("hello back", self());
             }
             System.out.println("Received another msg: " + msg);
+        } else {
+            System.err.println("Ok so I'm a child and got this: " + msg);
         }
     }
 }
