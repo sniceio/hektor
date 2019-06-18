@@ -15,7 +15,7 @@
     <name>Hektor IO</name>
     <groupId>io.hektor</groupId>
     <artifactId>hektor-parent</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <description>Hektor - Not your avarage Actor</description>
 
