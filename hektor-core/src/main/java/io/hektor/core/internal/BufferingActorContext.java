@@ -176,10 +176,9 @@ public class BufferingActorContext implements ActorContext {
         private List<Envelope> messages;
 
         public BufferingActorRef(final ActorRef self) {
-                System.err.println("New buffering actor created " + self.getClass());
-                if (self instanceof BufferingActorRef) {
-                    throw new RuntimeException();
-                }
+            if (self instanceof BufferingActorRef) {
+                throw new RuntimeException();
+            }
             assertNotNull(self);
             this.self = self;
         }

@@ -37,9 +37,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com:jonbo372/hektor.io.git</connection>
-        <developerConnection>scm:git:git@github.com:jonbo372/hektor.io.git</developerConnection>
-        <url>git@github.com:jonbo372/hektor.io.git</url>
+        <connection>scm:git:git@github.com:sniceio/hektor.git</connection>
+        <developerConnection>scm:git:git@github.com:sniceio/hektor.git</developerConnection>
+	<url>git@github.com:sniceio/hektor.git</url>
         <tag>HEAD</tag>
     </scm>
 
