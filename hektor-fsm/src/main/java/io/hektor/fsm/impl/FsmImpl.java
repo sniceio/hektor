@@ -9,6 +9,7 @@ import io.hektor.fsm.TransitionListener;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static io.hektor.fsm.PreConditions.ensureNotNull;
 
@@ -84,18 +85,31 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
     public final void onEvent(final Object event) {
         final Optional<Transition<Object, S, C, D>> optional = currentState.accept(event, ctx, data);
         if (optional.isPresent()) {
-            transition(optional.get(), event);
+            final Transition<Object, S, C, D> transition = optional.get();
+            transition(transition, event);
 
             // our builders is supposed to guarantee that we don't end up in a loop,
             // which is a risk with transient states.
             if (currentState.isTransient()) {
-                onEvent(event);
+                handleTransientTransition(transition, event);
             }
+
         } else {
             if (unhandledEventHandler != null) {
                 unhandledEventHandler.accept((S) currentState.getState(), event);
             }
         }
+    }
+
+    private void handleTransientTransition(final Transition<Object, S, C, D> transition, final Object event ) {
+        try {
+            final Optional<Function<Object, ?>> transform = transition.getTransformation();
+            final Object transformedEvent = transform.isPresent() ? transform.get().apply(event) : event;
+            onEvent(transformedEvent);
+        } catch (final Throwable t) {
+            // TODO: what is the strategy for if the transformation throws an exception?
+        }
+
     }
 
     /**
@@ -116,6 +130,7 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
                 exitCurrentState();
                 enterState(toState);
             }
+
         } catch(final Throwable t) {
             // TODO: HEKTOR-9
             t.printStackTrace();
