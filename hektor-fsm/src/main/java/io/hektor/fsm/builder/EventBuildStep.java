@@ -15,5 +15,5 @@ public interface EventBuildStep<S extends Enum<S>, C extends Context, D extends 
      * @param <E>
      * @return
      */
-    <E> DefaultTransitionBuilder<E, S, C, D> asDefaultTransition();
+    <E> TransitionBuilder<E, S, C, D> asDefaultTransition();
 }

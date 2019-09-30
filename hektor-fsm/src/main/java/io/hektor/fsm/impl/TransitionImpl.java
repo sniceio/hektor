@@ -8,6 +8,7 @@ import io.hektor.fsm.Transition;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -35,13 +36,16 @@ public class TransitionImpl<E, S extends Enum<S>, C extends Context, D extends D
     private final Optional<Consumer<E>> action;
     private final Optional<Action<E, C, D>> statefulAction;
 
+    private final Optional<Function<E, ?>> transformation;
+
     public TransitionImpl(final String description,
                           final S to,
                           final Class<E> event,
                           final Predicate<E> guard,
                           final Guard<E, C, D> richerGuard,
                           final Consumer<E> action,
-                          final Action<E, C, D> statefulAction) {
+                          final Action<E, C, D> statefulAction,
+                          final Function<E, ?> transformation) {
         this.description = description;
         this.to = to;
         this.event = event;
@@ -49,8 +53,10 @@ public class TransitionImpl<E, S extends Enum<S>, C extends Context, D extends D
         this.richerGuard = richerGuard;
         this.action = Optional.ofNullable(action);
         this.statefulAction = Optional.ofNullable(statefulAction);
+        this.transformation = Optional.ofNullable(transformation);
     }
 
+    @Override
     public boolean match(final Object event, final C ctx, final D data) {
         if (!this.event.isAssignableFrom(event.getClass())) {
             return false;
@@ -80,5 +86,10 @@ public class TransitionImpl<E, S extends Enum<S>, C extends Context, D extends D
     @Override
     public Optional<Action<E, C, D>> getStatefulAction() {
         return statefulAction;
+    }
+
+    @Override
+    public Optional<Function<E, ?>> getTransformation() {
+        return transformation;
     }
 }

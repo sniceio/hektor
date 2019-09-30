@@ -1,11 +1,11 @@
 package io.hektor.fsm;
 
 import io.hektor.fsm.builder.FSMBuilder;
-import io.hektor.fsm.builder.StateBuilder;
 import io.hektor.fsm.builder.exceptions.FinalStateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.InitialStateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.StateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.StateNotDefinedException;
+import io.hektor.fsm.builder.impl.StateBuilderImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,8 +75,8 @@ public class TestDefineFSM {
      */
     @Test(expected = StateNotDefinedException.class)
     public void testTransitionToUnDefinedState() {
-        final StateBuilder<SimpleFsmStates, Context, Data> init = builder.withInitialState(INIT);
-        final StateBuilder<SimpleFsmStates, Context, Data> working = builder.withState(WORKING);
+        final StateBuilderImpl<SimpleFsmStates, Context, Data> init = builder.withInitialState(INIT);
+        final StateBuilderImpl<SimpleFsmStates, Context, Data> working = builder.withState(WORKING);
         builder.withFinalState(DEAD);
 
         init.transitionTo(WORKING).asDefaultTransition();

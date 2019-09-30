@@ -6,11 +6,14 @@ import io.hektor.fsm.Definition;
 import io.hektor.fsm.State;
 import io.hektor.fsm.builder.exceptions.FSMBuilderException;
 import io.hektor.fsm.builder.exceptions.FinalStateAlreadyDefinedException;
+import io.hektor.fsm.builder.exceptions.IllegalTransformationOnTransitionException;
 import io.hektor.fsm.builder.exceptions.InitialStateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.StateAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.StateNotDefinedException;
 import io.hektor.fsm.builder.exceptions.TransientLoopDetectedException;
+import io.hektor.fsm.builder.impl.StateBuilderImpl;
 import io.hektor.fsm.impl.DefinitionImpl;
+import io.hektor.fsm.impl.StateImpl;
 
 import java.util.Arrays;
 
@@ -19,27 +22,27 @@ import java.util.Arrays;
  */
 public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
 
-    private final StateBuilder<S, C, D>[] states;
+    private final StateBuilderImpl<S, C, D>[] states;
 
     public FSMBuilder(final S[] possibleStates) {
-        states = new StateBuilder[possibleStates.length];
+        states = new StateBuilderImpl[possibleStates.length];
     }
 
-    public StateBuilder<S, C, D> withInitialState(final S state) {
+    public StateBuilderImpl<S, C, D> withInitialState(final S state) {
         if (hasInitialState()) {
             throw new InitialStateAlreadyDefinedException(state);
         }
 
-        final StateBuilder<S, C, D> builder = defineState(state, false);
+        final StateBuilderImpl<S, C, D> builder = defineState(state, false);
         builder.isInital(true);
         return builder;
     }
 
-    public StateBuilder<S, C, D> withFinalState(final S state) {
+    public StateBuilderImpl<S, C, D> withFinalState(final S state) {
         if (hasFinalState()) {
             throw new FinalStateAlreadyDefinedException(state);
         }
-        final StateBuilder<S, C, D> builder = defineState(state, false);
+        final StateBuilderImpl<S, C, D> builder = defineState(state, false);
         builder.isFinal(true);
         return builder;
     }
@@ -52,7 +55,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         return Arrays.stream(states).filter(b -> b != null && b.isInital()).findFirst().isPresent();
     }
 
-    public StateBuilder<S, C, D> withState(final S state) throws StateAlreadyDefinedException {
+    public StateBuilderImpl<S, C, D> withState(final S state) throws StateAlreadyDefinedException {
         return defineState(state, false);
     }
 
@@ -60,8 +63,8 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         return defineState(state, true);
     }
 
-    private StateBuilder<S, C, D> defineState(final S state, final boolean isTransient) throws StateAlreadyDefinedException {
-        final StateBuilder<S, C, D> builder = new StateBuilder<>(state, isTransient);
+    private StateBuilderImpl<S, C, D> defineState(final S state, final boolean isTransient) throws StateAlreadyDefinedException {
+        final StateBuilderImpl<S, C, D> builder = new StateBuilderImpl<>(state, isTransient);
         if (states[state.ordinal()] != null) {
             throw new StateAlreadyDefinedException(state);
         }
@@ -70,23 +73,35 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         return builder;
     }
 
+    /**
+     * Build the definition of the state machine and validate that all is well.
+     *
+     * The following rules will be validate upon building the definition:
+     *
+     * <ul>
+     *     <li></li>
+     *     <li></li>
+     *     <li></li>
+     *     <li>Transitions with transformations can only be going to transient states and anything else is
+     *     not allowed, hence, we will throw an exception.</li>
+     * </ul>
+     * @return
+     * @throws FSMBuilderException in case any issues with the FSM is detected.
+     */
     public Definition<S, C, D> build() throws FSMBuilderException {
         if (!hasInitialState()) {
-            throw new FSMBuilderException("FSM is missing an initial state");
+            throw new FSMBuilderException(FSMBuilderException.ErrorCode.NO_INITIAL_STATE);
         }
 
         if (!hasFinalState()) {
             throw new FSMBuilderException("FSM is missing a final state");
         }
 
-        final State<S, C, D>[] states = new State[this.states.length];
+        final StateImpl<S, C, D>[] states = new StateImpl[this.states.length];
         for (int i = 0; i < states.length; ++i) {
-            final StateBuilder<S, C, D> builder = this.states[i];
-            states[i] = builder != null ? builder.build() : null;
+            final StateBuilderImpl<S, C, D> builder = this.states[i];
+            states[i] = builder != null ? (StateImpl)builder.build() : null;
         }
-
-        // TODO: need to check so that all transitions are going
-        // to states that actually exists.
 
         checkTransitions(states);
         return new DefinitionImpl(states);
@@ -102,16 +117,23 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
      *
      * @param states
      */
-    private void checkTransitions(final State<S, C, D>[] states) throws TransientLoopDetectedException {
-        for (final State<S, C, D> state : states) {
+    private void checkTransitions(final StateImpl<S, C, D>[] states) throws TransientLoopDetectedException {
+        for (final StateImpl<S, C, D> state : states) {
             if (state == null) {
                 continue;
             }
 
             state.getConnectedNodes().forEach(s -> {
-                final State toState = states[s.ordinal()];
+                final State toState = (State)states[s.ordinal()];
                 if (toState == null) {
                     throw new StateNotDefinedException(s);
+                }
+
+                // if it's not a transient state, ensure that none of the transitions to this
+                // state doesn't have a transformation on it since it would be useless on a non-transient
+                // state and as such, it is forbidden (Because it would just be confusing for a user otherwise)
+                if (!toState.isTransient() && state.getTransitionsToState(s).stream().filter(t -> t.getTransformation().isPresent()).findFirst().isPresent()) {
+                    throw new IllegalTransformationOnTransitionException(state.getState(), toState.getState());
                 }
 
                 if (state.isTransient() && toState.isTransient()) {
@@ -129,6 +151,8 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
                     // on it...
                 }
             });
+
         }
     }
+
 }

@@ -1,7 +1,7 @@
 package io.hektor.fsm;
 
-import io.hektor.fsm.builder.StateBuilder;
 import io.hektor.fsm.builder.exceptions.StateBuilderException;
+import io.hektor.fsm.builder.impl.StateBuilderImpl;
 import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -19,7 +19,7 @@ public class StateTests {
 
     @Test
     public void testBuildState() {
-        final StateBuilder<SimpleFsmStates, Context, Data> builder = new StateBuilder(INIT);
+        final StateBuilderImpl<SimpleFsmStates, Context, Data> builder = new StateBuilderImpl(INIT);
 
         final CountDownLatch helloLatch = new CountDownLatch(1);
         final CountDownLatch quitLatch = new CountDownLatch(1);
@@ -45,7 +45,7 @@ public class StateTests {
      */
     @Test(expected = StateBuilderException.class)
     public void testInitialStateMissingTransitions() {
-        new StateBuilder(INIT).isInital(true).build();
+        new StateBuilderImpl(INIT).isInital(true).build();
     }
 
     /**
@@ -53,7 +53,7 @@ public class StateTests {
      */
     @Test(expected = StateBuilderException.class)
     public void testMissingTransitions() {
-        new StateBuilder(INIT).build();
+        new StateBuilderImpl(INIT).build();
     }
 
     /**
@@ -61,7 +61,7 @@ public class StateTests {
      */
     @Test(expected = StateBuilderException.class)
     public void testFinalStatehasTransitions() {
-        final StateBuilder<SimpleFsmStates, Context, Data> builder = new StateBuilder(DEAD).isFinal(true);
+        final StateBuilderImpl<SimpleFsmStates, Context, Data> builder = new StateBuilderImpl(DEAD).isFinal(true);
         builder.transitionTo(INIT).onEvent(String.class);
         builder.build();
     }

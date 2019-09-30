@@ -11,7 +11,7 @@ public class StateBuilderException extends FSMBuilderException {
     }
 
     public StateBuilderException(final Enum state, final String message) {
-        super(message);
+        super("[State " + state + "] " + message);
         this.state = state;
     }
 

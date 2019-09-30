@@ -1,6 +1,7 @@
 package io.hektor.fsm;
 
 import io.hektor.fsm.builder.TransitionBuilder;
+import io.hektor.fsm.builder.impl.TransitionBuilderImpl;
 import io.hektor.fsm.impl.TransitionImpl;
 import org.junit.Test;
 
@@ -20,7 +21,7 @@ public class TransitionTests {
     @Test
     public void testBasicEventMatching() {
         final Transition<String, SimpleFsmStates, Context, Data> transition =
-                new TransitionImpl<>("Testing transition", DONE, String.class, null, null, null, null);
+                new TransitionImpl<>("Testing transition", DONE, String.class, null, null, null, null, null);
 
         assertThat(transition.getToState(), is(DONE));
 
@@ -35,7 +36,7 @@ public class TransitionTests {
      */
     @Test
     public void testThatTwoGuardsCannotBeSpecified() {
-        final TransitionBuilder<String, SimpleFsmStates, Context, Data> builder = new TransitionBuilder<>(DONE, String.class);
+        final TransitionBuilder<String, SimpleFsmStates, Context, Data> builder = new TransitionBuilderImpl<>(DONE, String.class);
         builder.withGuard(s -> s.equals("hello"));
         assertGuardRejected(builder, s -> s.equals("here we go again")); // should be rejected
         assertGuardRejected(builder, (str, ctx, data) -> true);
@@ -46,7 +47,7 @@ public class TransitionTests {
      */
     @Test
     public void testThatTwoActionsCannotBeSpecified() {
-        final TransitionBuilder<String, SimpleFsmStates, Context, Data> builder = new TransitionBuilder<>(DONE, String.class);
+        final TransitionBuilder<String, SimpleFsmStates, Context, Data> builder = new TransitionBuilderImpl<>(DONE, String.class);
         builder.withAction(System.out::println); // the single Consumer<String> action
         assertActionRejected(builder, System.out::println); // should be rejected
         assertActionRejected(builder, (str, ctx, data) -> System.out.println("not allowed either"));
@@ -98,7 +99,7 @@ public class TransitionTests {
         final Predicate<String> guard = s -> s.equals("Hello World");
 
         final Transition<String, SimpleFsmStates, Context, Data> transition =
-                new TransitionImpl<>("Testing transition",  DONE, String.class, guard, null, null, null);
+                new TransitionImpl<>("Testing transition",  DONE, String.class, guard, null, null, null, null);
 
         assertThat(transition.match("Hello World", null, null), is(true));
 

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -68,6 +69,18 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
             connectedNodes.add(toState);
         }
     }
+
+    public List<Transition<?, S, C, D>> getTransitionsToState(final S state) {
+        final List<Transition<?, S, C, D>> ts = transitions.stream().filter(t -> t.getToState() == state).collect(Collectors.toList());
+        defaultTransition.ifPresent(d -> {
+            if (d.getToState() == state) {
+                ts.add(d);
+            }
+        });
+
+        return ts;
+
+    };
 
     @Override
     public S getState() {

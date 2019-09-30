@@ -5,99 +5,53 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.Guard;
 import io.hektor.fsm.Transition;
-import io.hektor.fsm.builder.exceptions.ActionAlreadyDefinedException;
-import io.hektor.fsm.builder.exceptions.GuardAlreadyDefinedException;
-import io.hektor.fsm.impl.TransitionImpl;
+import io.hektor.fsm.builder.exceptions.FSMBuilderException;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-/**
- * @author jonas@jonasborjesson.com
- */
-public class TransitionBuilder<E extends Object, S extends Enum<S>, C extends Context, D extends Data> implements DefaultTransitionBuilder<E, S, C, D> {
-
-    private final S toState;
-    private final Class<E> event;
+public interface TransitionBuilder<E extends Object, S extends Enum<S>, C extends Context, D extends Data> {
 
     /**
-     * whether or not this is a default transition.
-     */
-    private final boolean isDefault;
-
-    private Predicate<E> guard;
-    private Guard<E, C, D> richerGuard;
-
-    private Consumer<E> action;
-    private Action<E, C, D> statefulAction;
-
-    public TransitionBuilder(final S toState, final Class<E> event) {
-        this(toState, event, false);
-    }
-
-    public TransitionBuilder(final S toState, final Class<E> event, final boolean isDefault) {
-        this.toState = toState;
-        this.event = event;
-        this.isDefault = isDefault;
-    }
-
-    public TransitionBuilder<E, S, C, D> withGuard(final Predicate<E> guard) {
-        ensureGuardIsVisible();
-        assertGuard();
-        this.guard = guard;
-        return this;
-    }
-
-    public TransitionBuilder<E, S, C, D> withGuard(final Guard<E, C, D> guard) {
-        ensureGuardIsVisible();
-        assertGuard();
-        this.richerGuard = guard;
-        return this;
-    }
-
-    /**
-     * An empty action will be installed that will just silently consume the event.
      *
+     * @param guard
+     * @return
+     * @throws IllegalStateException in case you are trying to specify a guard for a transition that
+     * has been marked as a default transition (by definition, that "guard" is then accepting all)
      */
-    @Override
-    public TransitionBuilder<E, S, C, D> consume() {
-        return withAction(e -> {});
-    }
+    TransitionBuilder<E, S, C, D> withGuard(Predicate<E> guard) throws IllegalStateException;
 
-    @Override
-    public TransitionBuilder<E, S, C, D> withAction(final Consumer<E> action) {
-        assertAction();
-        this.action = action;
-        return this;
-    }
+    /**
+     *
+     * @param guard
+     * @return
+     * @throws IllegalStateException in case you are trying to specify a guard for a transition that
+     * has been marked as a default transition (by definition, that "guard" is then accepting all)
+     */
+    TransitionBuilder<E, S, C, D> withGuard(Guard<E, C, D> guard) throws IllegalStateException;
 
-    @Override
-    public TransitionBuilder<E, S, C, D> withAction(final Action<E, C, D> action) {
-        assertAction();
-        this.statefulAction = action;
-        return this;
-    }
+    TransitionBuilder<E, S, C, D> consume();
 
-    @Override
-    public Transition<E, S, C, D> build() {
-        return new TransitionImpl(null, toState, event, guard, richerGuard, action, statefulAction);
-    }
+    TransitionBuilder<E, S, C, D> withAction(Consumer<E> action);
 
-    private void assertGuard() throws GuardAlreadyDefinedException {
-        if (this.guard != null || this.richerGuard != null) {
-            throw new GuardAlreadyDefinedException("A guard has already been defined on this transition");
-        }
-    }
-    private void assertAction() throws ActionAlreadyDefinedException {
-        if (this.action != null || statefulAction != null) {
-            throw new ActionAlreadyDefinedException("An action has already been defined on this transition");
-        }
-    }
+    TransitionBuilder<E, S, C, D> withAction(Action<E, C, D> action);
 
-    private void ensureGuardIsVisible() {
-        if (isDefault) {
-            throw new IllegalStateException("You cannot use a guard with the default transition");
-        }
-    }
+    /**
+     * For transitions to a transient state, you can optionally specify a transformation that will be applied
+     * to the original event before entering the state you're automatically transitioning to.
+     *
+     * NOTE: the validation that the target state is indeed a transient state cannot be performed until the
+     * actual state machine definition is built ({@link FSMBuilder#build()}) so if you specify a transformation
+     * on a {@link Transition} that go to a "regular" state, then it will not be detected until later at which time
+     * an {@link FSMBuilderException} will be thrown.
+     *
+     * @param transformation
+     * @param <R>
+     * @return
+     * @throws IllegalStateException in case a transformation has already been specified.
+     */
+    <R> TransitionBuilder<E, S, C, D> withTransformation(Function<E, R> transformation) throws IllegalStateException;
 
+    Transition<E, S, C, D> build();
 }
