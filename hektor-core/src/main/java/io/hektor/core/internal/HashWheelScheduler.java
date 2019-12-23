@@ -9,6 +9,7 @@ import io.netty.util.TimerTask;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Simple wrapper around the netty HashWheelScheduler.
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class HashWheelScheduler implements Scheduler {
 
-    private HashedWheelTimer timer;
+    private final HashedWheelTimer timer;
 
     public HashWheelScheduler() {
         timer = new HashedWheelTimer();
@@ -25,7 +26,12 @@ public class HashWheelScheduler implements Scheduler {
 
     @Override
     public Cancellable schedule(final Object msg, final ActorRef receiver, final ActorRef sender, final Duration delay) {
-        final Task task = new Task(msg, receiver, sender);
+        return schedule(() -> msg, receiver, sender, delay);
+    }
+
+    @Override
+    public <T> Cancellable schedule(final Supplier<T> producer, final ActorRef receiver, final ActorRef sender, final Duration delay) {
+        final Task task = new Task(producer, receiver, sender);
         final Timeout timeout = timer.newTimeout(task, delay.toMillis(), TimeUnit.MILLISECONDS);
         return new CancellableTask(timeout);
     }
@@ -43,21 +49,26 @@ public class HashWheelScheduler implements Scheduler {
         }
     }
 
-    private static class Task implements TimerTask {
+    private static class Task<T> implements TimerTask {
 
-        private final Object msg;
+        private final Supplier<T> supplier;
         private final ActorRef receiver;
         private final ActorRef sender;
 
-        public Task(final Object msg, final ActorRef receiver, final ActorRef sender) {
-            this.msg = msg;
+        public Task(final Supplier<T> supplier, final ActorRef receiver, final ActorRef sender) {
+            this.supplier = supplier;
             this.receiver = receiver;
             this.sender = sender;
         }
 
         @Override
         public void run(final Timeout timeout) throws Exception {
-            receiver.tell(msg, sender);
+            try {
+                receiver.tell(supplier.get(), sender);
+            } catch (final Exception e) {
+                // TODO: what to do if the supplier throws an exception?
+                throw e;
+            }
         }
     }
 

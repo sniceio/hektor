@@ -33,4 +33,6 @@ public interface Scheduler {
      * @return
      */
     <T> Cancellable schedule(Supplier<T> producer, Duration delay);
+
+    <T> Cancellable schedule(T msg, Duration delay);
 }

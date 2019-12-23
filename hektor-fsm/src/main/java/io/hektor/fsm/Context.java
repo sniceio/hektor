@@ -5,5 +5,9 @@ package io.hektor.fsm;
  */
 public interface Context {
 
-    Scheduler getScheduler();
+    ThreadLocal<Scheduler> _scheduler = new ThreadLocal<>();
+
+    default Scheduler getScheduler() {
+        return _scheduler.get();
+    }
 }
