@@ -28,7 +28,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         states = new StateBuilderImpl[possibleStates.length];
     }
 
-    public StateBuilderImpl<S, C, D> withInitialState(final S state) {
+    public StateBuilder<S, C, D> withInitialState(final S state) {
         if (hasInitialState()) {
             throw new InitialStateAlreadyDefinedException(state);
         }
@@ -38,7 +38,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         return builder;
     }
 
-    public StateBuilderImpl<S, C, D> withFinalState(final S state) {
+    public StateBuilder<S, C, D> withFinalState(final S state) {
         if (hasFinalState()) {
             throw new FinalStateAlreadyDefinedException(state);
         }
@@ -55,7 +55,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         return Arrays.stream(states).filter(b -> b != null && b.isInital()).findFirst().isPresent();
     }
 
-    public StateBuilderImpl<S, C, D> withState(final S state) throws StateAlreadyDefinedException {
+    public StateBuilder<S, C, D> withState(final S state) throws StateAlreadyDefinedException {
         return defineState(state, false);
     }
 

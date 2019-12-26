@@ -51,6 +51,8 @@ public interface State<S extends Enum<S>, C extends Context, D extends Data> {
      */
     Optional<Transition<? extends Object, S, C, D>> accept(Object event, C ctx, D data);
 
+    Optional<BiConsumer<C, D>> getInitialEnterAction();
+
     Optional<BiConsumer<C, D>> getEnterAction();
 
     Optional<BiConsumer<C, D>> getExitAction();

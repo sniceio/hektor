@@ -24,6 +24,7 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     private final boolean isTransient;
     private final List<Transition<?, S, C, D>> transitions;
     private final Optional<Transition<?, S, C, D>> defaultTransition;
+    private final Optional<BiConsumer<C, D>> initialEnterAction;
     private final Optional<BiConsumer<C, D>> enterAction;
     private final Optional<BiConsumer<C, D>> exitAction;
 
@@ -35,6 +36,7 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
                      final boolean isTransient,
                      final List<Transition<?, S, C, D>> transitions,
                      final Optional<Transition<?, S, C, D>> defaultTransition,
+                     final BiConsumer<C, D> initialEnterAction,
                      final BiConsumer<C, D> enterAction,
                      final BiConsumer<C, D> exitAction) {
         this.state = state;
@@ -43,6 +45,7 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
         this.isTransient = isTransient;
         this.transitions = transitions;
         this.defaultTransition = defaultTransition;
+        this.initialEnterAction = Optional.ofNullable(initialEnterAction);
         this.enterAction = Optional.ofNullable(enterAction);
         this.exitAction = Optional.ofNullable(exitAction);
 
@@ -85,6 +88,11 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     @Override
     public S getState() {
         return state;
+    }
+
+    @Override
+    public Optional<BiConsumer<C, D>> getInitialEnterAction() {
+        return initialEnterAction;
     }
 
     @Override

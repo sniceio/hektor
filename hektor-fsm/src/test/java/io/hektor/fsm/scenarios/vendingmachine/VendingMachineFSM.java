@@ -3,7 +3,7 @@ package io.hektor.fsm.scenarios.vendingmachine;
 import io.hektor.fsm.Definition;
 import io.hektor.fsm.FSM;
 import io.hektor.fsm.builder.FSMBuilder;
-import io.hektor.fsm.builder.impl.StateBuilderImpl;
+import io.hektor.fsm.builder.StateBuilder;
 import io.hektor.fsm.scenarios.vendingmachine.events.CancelEvent;
 
 import static io.hektor.fsm.scenarios.vendingmachine.VendingMachineFSM.VendingState.IDLE;
@@ -67,12 +67,12 @@ public class VendingMachineFSM {
                 FSM.of(VendingState.class).ofContextType(VendingContext.class).withDataType(VendingData.class);
 
         // 2. Define all the states:
-        final StateBuilderImpl<VendingState, VendingContext, VendingData> idle = builder.withInitialState(IDLE);
-        final StateBuilderImpl<VendingState, VendingContext, VendingData> insertingCoins = builder.withState(INSERTING_COINS);
+        final StateBuilder<VendingState, VendingContext, VendingData> idle = builder.withInitialState(IDLE);
+        final StateBuilder<VendingState, VendingContext, VendingData> insertingCoins = builder.withState(INSERTING_COINS);
         // final StateBuilderImpl<VendingState, VendingContext, VendingData> userChoose = builder.withState(USER_CHOOSE);
         // final StateBuilderImpl<VendingState, VendingContext, VendingData> makeCoffee = builder.withState(MAKE_COFFEE);
         // final StateBuilderImpl<VendingState, VendingContext, VendingData> serviceNeeded = builder.withState(SERVICE_NEEDED);
-        final StateBuilderImpl<VendingState, VendingContext, VendingData> off = builder.withFinalState(OFF);
+        final StateBuilder<VendingState, VendingContext, VendingData> off = builder.withFinalState(OFF);
 
         // 3. Define all enter/exit actions.
         //    Of course, you can define them in the same statement when you define them above.

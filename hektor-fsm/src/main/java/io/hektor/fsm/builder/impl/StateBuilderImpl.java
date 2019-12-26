@@ -40,10 +40,16 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
     /**
      * There must be a default transition defined, which is a transition that
      * accepts any event and has no guards. I.e., it is guaranteed it will
-     * be executed, which is necessary for transition states.
+     * be executed, which is necessary for transient states.
      */
     private TransitionBuilder<Object, S, C, D> defaultTransition;
 
+    /**
+     * The initial enter action is an action that is ONLY executed the very first
+     * time you enter the state. Once it has been executed that one time, it will
+     * never ever be executed again.
+     */
+    private BiConsumer<C, D> initialEnterAction;
     private BiConsumer<C, D> enterAction;
     private BiConsumer<C, D> exitAction;
 
@@ -69,6 +75,12 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
     @Override
     public StateBuilderImpl<S, C, D> withEnterAction(final BiConsumer<C, D> action) {
         enterAction = action;
+        return this;
+    }
+
+    @Override
+    public StateBuilderImpl<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action) {
+        initialEnterAction = action;
         return this;
     }
 
@@ -173,7 +185,7 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
 
         final List<Transition<?, S, C, D>> ts = transitions.stream().map(TransitionBuilder::build).collect(Collectors.toList());
         final Optional<Transition<Object, S, C, D>> defaultTs = Optional.ofNullable(defaultTransition == null ? null : defaultTransition.build());
-        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts, defaultTs, enterAction, exitAction);
+        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts, defaultTs, initialEnterAction, enterAction, exitAction);
     }
 
 

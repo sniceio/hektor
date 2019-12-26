@@ -31,6 +31,8 @@ public interface ActorRef {
      */
     CompletionStage<Object> ask(Object msg, ActorRef sender) throws IllegalArgumentException;
 
+    // <T> CompletionStage<T> ask(Object msg, ActorRef sender, Function<Object, T> transform) throws IllegalArgumentException;
+
     void tell(Object msg, ActorRef sender);
 
     /**
@@ -38,7 +40,7 @@ public interface ActorRef {
      *
      * @param msg
      */
-    default void tell(Object msg) {
+    default void tell(final Object msg) {
         tell(msg, this);
     }
 
@@ -83,27 +85,27 @@ public interface ActorRef {
         }
 
         @Override
-        public CompletionStage<Object> ask(Object msg, ActorRef sender) {
+        public CompletionStage<Object> ask(final Object msg, final ActorRef sender) {
             return NO_FUTURE;
         }
 
         @Override
-        public void tell(Object msg, ActorRef sender) {
+        public void tell(final Object msg, final ActorRef sender) {
             // ignored
         }
 
         @Override
-        public void tell(Priority priority, Object msg, ActorRef sender) {
+        public void tell(final Priority priority, final Object msg, final ActorRef sender) {
             // ignored
         }
 
         @Override
-        public void tellAnonymously(Object msg) {
+        public void tellAnonymously(final Object msg) {
             // ignored.
         }
 
         @Override
-        public void monitor(ActorRef ref) {
+        public void monitor(final ActorRef ref) {
             // ignored.
         }
 

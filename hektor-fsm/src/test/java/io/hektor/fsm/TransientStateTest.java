@@ -9,7 +9,6 @@ import io.hektor.fsm.builder.exceptions.TransientStateMissingTransitionException
 import io.hektor.fsm.builder.exceptions.TransitionMissingException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +22,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * Test our transient states.
@@ -57,6 +59,50 @@ public class TransientStateTest {
 
         latch = new CountDownLatch(1);
     }
+
+    /**
+     * You can optionally specify an initial enter action, which is an action that will only ever
+     * execute once and that is when you enter the state the very first time. Any subsequent "enters"
+     * into that state will not cause this "initial enter action" to be executed.
+     */
+    @Test
+    public void testInitialEnterAction() throws Exception {
+        final CountDownLatch initialEnterAction = mock(CountDownLatch.class);
+        final CountDownLatch enterActionLatch = mock(CountDownLatch.class);
+
+        b = builder.withState(SuperSimpleStates.B);
+        c = builder.withState(SuperSimpleStates.C);
+
+        b.withInitialEnterAction((ctx, data) -> initialEnterAction.countDown());
+        b.withEnterAction((ctx, data) -> enterActionLatch.countDown());
+
+        a.transitionTo(SuperSimpleStates.B).onEvent(String.class);
+        b.transitionTo(SuperSimpleStates.H).onEvent(String.class).withGuard("exit"::equals);
+        b.transitionTo(SuperSimpleStates.C).onEvent(String.class); // note: more generic so must be specified after the "exit" guard.
+
+        // Note that we have to actually leave the state in order to enter it again.
+        // Just going from B -> B doesnt trigger the enter/exit actions to be executed.
+        c.transitionTo(SuperSimpleStates.B).onEvent(String.class);
+
+        go("hello");
+        verify(initialEnterAction).countDown();
+        verify(enterActionLatch).countDown();
+
+        // Transition B -> C -> B
+        fsm.onEvent("going to C");
+        fsm.onEvent("going from C -> B and should not have the initial enter action kicking in again");
+
+        // still only once - and calling times(1) just to make it obvious what I want
+        // (default is times(1) so it is not necessary but again, making it obvious)
+        verify(initialEnterAction, times(1)).countDown();
+
+        // the regular one should have been called twice though
+        verify(enterActionLatch, times(2)).countDown();
+
+        fsm.onEvent("exit");
+        assertThat(fsm.isTerminated(), is(true));
+    }
+
 
     /**
      * You are only allowed to have a transformation on a transition that is going to a transient state.
@@ -372,7 +418,7 @@ public class TransientStateTest {
     }
 
     private FSM<SuperSimpleStates, Context, Data> build() {
-        return builder.build().newInstance("uuid-123", Mockito.mock(Context.class), Mockito.mock(Data.class),
+        return builder.build().newInstance("uuid-123", mock(Context.class), mock(Data.class),
                 TransientStateTest::onUnhandledEvent, TransientStateTest::onTransition);
     }
 

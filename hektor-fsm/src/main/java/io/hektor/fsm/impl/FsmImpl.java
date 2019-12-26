@@ -21,6 +21,7 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
     private final BiConsumer<S, Object> unhandledEventHandler;
     private final TransitionListener<S> transitionListener;
     private final State[] states;
+    private final boolean[] hasEnteredState;
     private final S initialState;
     private final C ctx;
     private final D data;
@@ -41,6 +42,12 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
         this.data = data;
         this.unhandledEventHandler = unhandledEventHandler;
         this.transitionListener = transitionListener;
+
+        // keep track of whether we have ever entered a given
+        // state, which is needed to keep track of whether or not we
+        // should execute the initial enter action, which is only done the
+        // very first time you enter a state.
+        hasEnteredState = new boolean[states.length];
     }
 
     @Override
@@ -70,9 +77,17 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
 
     private void enterState(final S state) {
         currentState = states[state.ordinal()];
-        final Optional<BiConsumer<C, D>> action = currentState.getEnterAction();
-
         // TODO: catch all if action throws exception
+
+        // only execute the initial enter action the very first time you
+        // enter the state.
+        if (!hasEnteredState[currentState.getState().ordinal()]) {
+            final Optional<BiConsumer<C, D>> initialAction = currentState.getInitialEnterAction();
+            initialAction.ifPresent(a -> a.accept(ctx, data));
+            hasEnteredState[currentState.getState().ordinal()] = true;
+        }
+
+        final Optional<BiConsumer<C, D>> action = currentState.getEnterAction();
         action.ifPresent(a -> a.accept(ctx, data));
     }
 
@@ -132,7 +147,9 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
             }
 
         } catch(final Throwable t) {
-            // TODO: HEKTOR-9
+            // TODO: HEKTOR-9 - and it is quite bad if the current state is a transient
+            // state and the "exitCurrentState" is the one throwing the exception
+            // then we'll end up in a loop
             t.printStackTrace();
         }
     }
