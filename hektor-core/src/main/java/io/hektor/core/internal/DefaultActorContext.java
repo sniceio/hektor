@@ -4,8 +4,8 @@ import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
-import io.hektor.core.Request;
 import io.hektor.core.Scheduler;
+import io.snice.protocol.Request;
 
 import java.util.ArrayList;
 import java.util.List;

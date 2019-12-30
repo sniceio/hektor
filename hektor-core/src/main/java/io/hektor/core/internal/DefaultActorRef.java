@@ -5,9 +5,9 @@ import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
-import io.hektor.core.Request;
-import io.hektor.core.Response;
 import io.hektor.core.internal.messages.Watch;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 import java.util.concurrent.CompletionStage;
 
@@ -101,7 +101,7 @@ public class DefaultActorRef implements InternalActorRef {
     }
 
     @Override
-    public Request request(final Object msg, final ActorRef sender) {
+    public Request<ActorRef> request(final Object msg, final ActorRef sender) {
         final DefaultRequest req = DefaultRequest.create(sender, msg);
         processMessage(null, sender, req, null);
         return req;
@@ -110,11 +110,11 @@ public class DefaultActorRef implements InternalActorRef {
     @Override
     public Response respond(final Object msg, final Request req, final ActorRef sender, final boolean isFinal) {
         final DefaultRequest request = (DefaultRequest)req;
-        assertArgument(request.getSender().equals(this), "You must send the response to the same actor that " +
+        assertArgument(request.getOwner().equals(this), "You must send the response to the same actor that " +
                 "initiated the original request. You tried to send the response to " +
-                this + "but the actor who sent the request is " + request.getSender());
+                this + "but the actor who sent the request is " + request.getOwner());
 
-        final DefaultResponse response = DefaultResponse.create(msg, request, isFinal);
+        final DefaultResponse response = request.createResponse().withMessage(msg).isFinal(isFinal).build();
         processMessage(null, sender, null, response);
         return response;
     }

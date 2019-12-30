@@ -1,8 +1,8 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.ActorRef;
-import io.hektor.core.Request;
-import io.hektor.core.Response;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 public interface InternalActorRef extends ActorRef {
 

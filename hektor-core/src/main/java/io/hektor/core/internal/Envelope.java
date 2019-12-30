@@ -1,7 +1,7 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.ActorRef;
-import io.hektor.core.Request;
+import io.snice.protocol.Request;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -27,7 +27,7 @@ public class Envelope {
     }
 
     public Envelope(final ActorRef sender, final ActorRef receiver, final Request request) {
-        this(Priority.NORMAL, sender, receiver, request.getMessage(), null, request, null);
+        this(Priority.NORMAL, sender, receiver, ((DefaultRequest)request).getMessage(), null, request, null);
     }
 
     public Envelope(final ActorRef sender, final ActorRef receiver, final DefaultResponse response) {

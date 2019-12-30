@@ -1,5 +1,8 @@
 package io.hektor.core;
 
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
+
 import java.util.concurrent.CompletionStage;
 
 public interface TransactionalActor extends Actor {

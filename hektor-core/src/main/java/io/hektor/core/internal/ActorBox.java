@@ -2,8 +2,8 @@ package io.hektor.core.internal;
 
 import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
-import io.hektor.core.Request;
 import io.hektor.core.internal.messages.Stop;
+import io.snice.protocol.Request;
 
 import java.util.HashMap;
 import java.util.HashSet;

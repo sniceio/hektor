@@ -1,5 +1,8 @@
 package io.hektor.core;
 
+import io.hektor.core.internal.DefaultRequest;
+import io.snice.protocol.Request;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,7 +16,7 @@ public class RespondingActor implements TransactionalActor {
         return Props.forActor(RespondingActor.class, () -> new RespondingActor());
     }
 
-    private final Map<String, Request> requests = new HashMap<>();
+    private final Map<String, DefaultRequest> requests = new HashMap<>();
 
     private RespondingActor() {
         // left empty intentionally
@@ -40,7 +43,9 @@ public class RespondingActor implements TransactionalActor {
     }
 
     @Override
-    public void onRequest(final Request request) {
+    public void onRequest(final Request req) {
+        final DefaultRequest request = (DefaultRequest)req;
+
         requests.put(request.getTransactionId().toString(), request);
 
         final String cmd = (String)request.getMessage();
@@ -72,13 +77,13 @@ public class RespondingActor implements TransactionalActor {
      * @return
      */
     private void processTransaction(final String cmd, final boolean isFinal) {
-        final Request request = ensureRequest(cmd.split(" ")[1]);
+        final DefaultRequest request = ensureRequest(cmd.split(" ")[1]);
         final String msg = cmd.split(" ", 3)[2];
-        request.getSender().respond(msg, request, self(), isFinal);
+        request.getOwner().respond(msg, request, self(), isFinal);
     }
 
-    private Request ensureRequest(final String transactionId) {
-        final Request req = requests.get(transactionId);
+    private DefaultRequest ensureRequest(final String transactionId) {
+        final DefaultRequest req = requests.get(transactionId);
         assertNotNull(req);
         return req;
     }

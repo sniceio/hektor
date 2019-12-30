@@ -1,14 +1,14 @@
 package io.hektor.core.internal;
 
 import io.hektor.core.ActorRef;
-import io.hektor.core.Request;
-import io.hektor.core.TransactionId;
+import io.snice.protocol.Request;
+import io.snice.protocol.TransactionId;
 
 import java.util.Objects;
 
 import static io.hektor.core.internal.PreConditions.assertNotNull;
 
-public class DefaultRequest implements Request {
+public class DefaultRequest implements Request<ActorRef> {
 
     private final Object msg;
     private final ActorRef sender;
@@ -17,7 +17,7 @@ public class DefaultRequest implements Request {
     public static DefaultRequest create(final ActorRef sender, final Object msg) {
         assertNotNull(sender);
         assertNotNull(msg);
-        return new DefaultRequest(sender, msg, TransactionId.generate());
+        return new DefaultRequest(sender, msg, TransactionId.generateDefault());
     }
 
     private DefaultRequest(final ActorRef sender, final Object msg, final TransactionId transactionId) {
@@ -26,17 +26,6 @@ public class DefaultRequest implements Request {
         this.transactionId = transactionId;
     }
 
-    @Override
-    public TransactionId getTransactionId() {
-        return transactionId;
-    }
-
-    @Override
-    public ActorRef getSender() {
-        return sender;
-    }
-
-    @Override
     public Object getMessage() {
         return msg;
     }
@@ -52,5 +41,20 @@ public class DefaultRequest implements Request {
     @Override
     public int hashCode() {
         return transactionId.hashCode();
+    }
+
+    @Override
+    public DefaultResponse.Builder createResponse() {
+        return DefaultResponse.of(sender, transactionId);
+    }
+
+    @Override
+    public ActorRef getOwner() {
+        return sender;
+    }
+
+    @Override
+    public TransactionId getTransactionId() {
+        return transactionId;
     }
 }

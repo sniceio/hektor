@@ -1,5 +1,9 @@
 package io.hektor.core;
 
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
+import io.snice.protocol.TransactionId;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

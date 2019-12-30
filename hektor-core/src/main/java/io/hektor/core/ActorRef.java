@@ -1,6 +1,8 @@
 package io.hektor.core;
 
 import io.hektor.core.internal.Priority;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -31,7 +33,7 @@ public interface ActorRef {
      */
     CompletionStage<Object> ask(Object msg, ActorRef sender) throws IllegalArgumentException;
 
-    default CompletionStage<Object> ask(Object msg) {
+    default CompletionStage<Object> ask(final Object msg) {
         return ask(msg, this);
     }
 
@@ -43,8 +45,7 @@ public interface ActorRef {
      * @param sender
      * @return
      */
-    Request request(Object msg, ActorRef sender);
-
+    Request<ActorRef> request(Object msg, ActorRef sender);
 
     /**
      * When you respond to a {@link Request}, you must do so via this method, which will ensure that

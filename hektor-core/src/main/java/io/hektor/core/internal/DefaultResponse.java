@@ -1,32 +1,29 @@
 package io.hektor.core.internal;
 
-import io.hektor.core.Response;
-import io.hektor.core.TransactionId;
-
-import java.util.Objects;
+import io.hektor.core.ActorRef;
+import io.snice.protocol.Response;
+import io.snice.protocol.TransactionId;
 
 import static io.snice.preconditions.PreConditions.assertNotNull;
 
-public class DefaultResponse implements Response {
+public class DefaultResponse implements Response<ActorRef> {
 
     private final Object msg;
+    private final ActorRef owner;
     private final boolean isFinal;
-    private final DefaultRequest request;
+    private final TransactionId id;
 
-    public static DefaultResponse create(final Object msg, final DefaultRequest request, final boolean isFinal) {
-        assertNotNull(msg);
-        assertNotNull(request);
-        return new DefaultResponse(msg, request, isFinal);
-    }
-
-    private DefaultResponse(final Object msg, final DefaultRequest request, final boolean isFinal) {
+    private DefaultResponse(final TransactionId id, final ActorRef owner, final Object msg, final boolean isFinal) {
+        this.id = id;
+        this.owner = owner;
         this.msg = msg;
-        this.request = request;
         this.isFinal = isFinal;
     }
 
-    public TransactionId getTransactionId() {
-        return request.getTransactionId();
+    public static Builder of(final ActorRef owner, final TransactionId id) {
+        assertNotNull(owner);
+        assertNotNull(id);
+        return new Builder(owner, id);
     }
 
     @Override
@@ -34,21 +31,46 @@ public class DefaultResponse implements Response {
         return isFinal;
     }
 
-    @Override
     public Object getMessage() {
         return msg;
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final DefaultResponse that = (DefaultResponse) o;
-        return Objects.equals(request.getTransactionId(), that.request.getTransactionId());
+    public ActorRef getOwner() {
+        return owner;
     }
 
     @Override
-    public int hashCode() {
-        return request.getTransactionId().hashCode();
+    public TransactionId getTransactionId() {
+        return id;
+    }
+
+    public static class Builder implements Response.Builder<ActorRef> {
+
+        private final TransactionId id;
+        private final ActorRef owner;
+        private boolean isFinal = true;
+        private Object msg;
+
+        private Builder(final ActorRef owner, final TransactionId id) {
+            this.owner = owner;
+            this.id = id;
+        }
+
+        @Override
+        public Builder isFinal(final boolean value) {
+            isFinal = value;
+            return this;
+        }
+
+        public Builder withMessage(final Object msg) {
+            this.msg = msg;
+            return this;
+        }
+
+        @Override
+        public DefaultResponse build() {
+            return new DefaultResponse(id, owner, msg, isFinal);
+        }
     }
 }

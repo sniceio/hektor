@@ -4,11 +4,11 @@ import io.hektor.core.Actor;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.LifecycleEvent;
-import io.hektor.core.Request;
-import io.hektor.core.Response;
 import io.hektor.core.internal.messages.Start;
 import io.hektor.core.internal.messages.Stop;
 import io.hektor.core.internal.messages.Watch;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

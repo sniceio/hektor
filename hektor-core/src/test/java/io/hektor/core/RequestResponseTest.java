@@ -1,5 +1,10 @@
 package io.hektor.core;
 
+import io.hektor.core.internal.DefaultRequest;
+import io.hektor.core.internal.DefaultResponse;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
+import io.snice.protocol.TransactionId;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,14 +57,14 @@ public class RequestResponseTest extends HektorTestBase {
         requester.tell("hello");
         responseLatchCount1.await();
 
-        final Request request = getRequest(requester);
+        final DefaultRequest request = getRequest(requester);
         assertThat(request, notNullValue());
         assertThat(request.getMessage(), is("hello"));
 
-        final Map<TransactionId, List<Response>> responses = getResponses(requester);
+        final Map<TransactionId, List<DefaultResponse>> responses = getResponses(requester);
         assertThat(responses.size(), CoreMatchers.is(1));
 
-        final Response response = responses.values().iterator().next().get(0);
+        final DefaultResponse response = responses.values().iterator().next().get(0);
         assertThat(response.isFinal(), is(true));
         assertThat(response.getMessage(), is("world"));
         assertThat(response.getTransactionId(), is(request.getTransactionId()));
@@ -78,16 +83,16 @@ public class RequestResponseTest extends HektorTestBase {
         responseLatchCount2.await();
 
         final Map<TransactionId, Request> requests = getRequests(requester);
-        final Map<TransactionId, List<Response>> responses = getResponses(requester);
+        final Map<TransactionId, List<DefaultResponse>> responses = getResponses(requester);
         assertThat(requests.size(), is(2));
         assertThat(responses.size(), is(2));
 
         final Request helloRequest = findRequest(requests, "hello");
-        final Response helloResponse = ensureSingleResponse(requester, helloRequest.getTransactionId());
+        final DefaultResponse helloResponse = ensureSingleResponse(requester, helloRequest.getTransactionId());
         assertResponse(helloResponse, "world");
 
-        final Request countRequest = findRequest(requests, "count 6");
-        final Response countResponse = ensureSingleResponse(requester, countRequest.getTransactionId());
+        final DefaultRequest countRequest = findRequest(requests, "count 6");
+        final DefaultResponse countResponse = ensureSingleResponse(requester, countRequest.getTransactionId());
         assertResponse(countResponse, "0 1 2 3 4 5");
     }
 
@@ -115,7 +120,7 @@ public class RequestResponseTest extends HektorTestBase {
         responder.tell(finalResponse(request, "three"));
 
         responseLatchCount3.await();
-        final List<Response> responses = getResponses(requester, request.getTransactionId());
+        final List<DefaultResponse> responses = getResponses(requester, request.getTransactionId());
         assertThat(responses.size(), is(3));
         assertResponse(responses.get(0), "one", false);
         assertResponse(responses.get(1), "two", false);
@@ -131,8 +136,8 @@ public class RequestResponseTest extends HektorTestBase {
     }
 
 
-    private List<Response> getResponses(final ActorRef ref, final TransactionId transactionId) throws Exception {
-        final List<Response> list = getResponses(ref).get(transactionId);
+    private List<DefaultResponse> getResponses(final ActorRef ref, final TransactionId transactionId) throws Exception {
+        final List<DefaultResponse> list = getResponses(ref).get(transactionId);
         assertCollectionNotEmpty(list, "Expected at least one response for transaction " + transactionId);
         return list;
     }
@@ -141,39 +146,39 @@ public class RequestResponseTest extends HektorTestBase {
      * Convenience method for making sure that there is only a single {@link Response} for the given
      * {@link TransactionId}.
      */
-    private Response ensureSingleResponse(final ActorRef ref, final TransactionId transactionId) throws Exception {
-        final List<Response> list = getResponses(ref, transactionId);
+    private DefaultResponse ensureSingleResponse(final ActorRef ref, final TransactionId transactionId) throws Exception {
+        final List<DefaultResponse> list = getResponses(ref, transactionId);
         assertArgument(list.size() == 1, "Only expected a single response for transaction " + transactionId);
         return list.get(0);
     }
 
-    private Request findRequest(final Map<TransactionId, Request> requests, final String msg) {
-        return requests.values().stream().filter(req -> msg.equals(req.getMessage()))
+    private DefaultRequest findRequest(final Map<TransactionId, Request> requests, final String msg) {
+        return requests.values().stream().map(req -> (DefaultRequest)req).filter(req -> msg.equals(req.getMessage()))
                 .findFirst().orElseThrow(() -> new RuntimeException("Expected to find a Request containing message "
                         + msg + " but didn't"));
     }
 
-    private void assertResponse(final Response response, final String expectedMsg) {
+    private void assertResponse(final DefaultResponse response, final String expectedMsg) {
         assertResponse(response, expectedMsg, true);
     }
 
-    private void assertResponse(final Response response, final String expectedMsg, final boolean isFinal) {
+    private void assertResponse(final DefaultResponse response, final String expectedMsg, final boolean isFinal) {
         assertThat(response.getMessage(), is(expectedMsg));
         assertThat(response.isFinal(), is(isFinal));
     }
 
-    private Map<TransactionId, List<Response>> getResponses(final ActorRef actor) throws Exception {
-        return (Map<TransactionId, List<Response>>)actor.ask("responses").toCompletableFuture().get();
+    private Map<TransactionId, List<DefaultResponse>> getResponses(final ActorRef actor) throws Exception {
+        return (Map<TransactionId, List<DefaultResponse>>)actor.ask("responses").toCompletableFuture().get();
     }
 
     private Map<TransactionId, Request> getRequests(final ActorRef actor) throws Exception {
         return (Map<TransactionId, Request>)actor.ask("requests").toCompletableFuture().get();
     }
 
-    private Request getRequest(final ActorRef actor) throws Exception {
+    private DefaultRequest getRequest(final ActorRef actor) throws Exception {
         final Map<TransactionId, Request> requests = (Map<TransactionId, Request>)actor.ask("requests").toCompletableFuture().get();
         assertThat(requests, notNullValue());
-        return requests.values().iterator().next();
+        return (DefaultRequest)requests.values().iterator().next();
     }
 
 }

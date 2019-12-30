@@ -6,12 +6,12 @@ import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
-import io.hektor.core.Request;
-import io.hektor.core.Response;
 import io.hektor.core.RoutingLogic;
 import io.hektor.core.Scheduler;
 import io.hektor.core.internal.messages.Start;
 import io.hektor.core.internal.messages.Watch;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 import java.util.ArrayList;
 import java.util.List;
