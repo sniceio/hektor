@@ -4,6 +4,8 @@ import io.hektor.core.Actor;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.LifecycleEvent;
+import io.hektor.core.Request;
+import io.hektor.core.Response;
 import io.hektor.core.internal.messages.Start;
 import io.hektor.core.internal.messages.Stop;
 import io.hektor.core.internal.messages.Watch;
@@ -51,6 +53,13 @@ public class InvokeActorTask implements Runnable {
             Actor._ctx.set(ctx);
             if (msg == Start.MSG) {
                 box.actor().start();
+            } else if (Request.class.isInstance(msg)) {
+                // TODO: we know this when we create the InvokeActorTask so let's
+                // pass that info along instead of "figuring" it out again. Will do that
+                // later if I even like this request/response stuff...
+                processRequest(box, (Request)msg);
+            } else if (Response.class.isInstance(msg)) {
+                processResponse(box, (Response)msg);
             } else {
                 box.actor().onReceive(msg);
             }
@@ -63,6 +72,31 @@ public class InvokeActorTask implements Runnable {
         }
 
         return Optional.empty();
+    }
+
+    private void processRequest(final ActorBox box, final Request req) {
+        final Actor actor = box.actor();
+        if (!actor.hasTransactionalSupport()) {
+            // What should we do? I guess it is a transaction so we can
+            // send back a TransactionNotSupportedResponse back to the
+            // requester... TODO
+            return;
+        }
+
+        box.storeRequest(req);
+        box.actor().toTransactionalActor().onRequest(req);
+    }
+
+    private void processResponse(final ActorBox box, final Response response) {
+        final Actor actor = box.actor();
+        if (!actor.hasTransactionalSupport()) {
+            // Same as with the processRequest but this shouldn't really be able to
+            // happen unless someone faked the Response class...
+            return;
+        }
+
+        box.actor().toTransactionalActor().onResponse(response);
+
     }
 
     /**
@@ -176,7 +210,14 @@ public class InvokeActorTask implements Runnable {
                 if (askFuture != null && e.receiver().equals(sender)) {
                     askFuture.complete(e.message());
                 } else {
-                    e.receiver().tell(Priority.HIGH, e.message(), e.sender());
+                    final InternalActorRef ref = (InternalActorRef) e.receiver();
+                    if (e.isRequest()) {
+                        ref.dispatch(e.getRequest(), e.sender());
+                    }  else if (e.isResponse()) {
+                        ref.dispatch(e.getResponse(), e.sender());
+                    } else {
+                        ref.dispatch(e.message(), e.sender());
+                    }
                 }
             });
 

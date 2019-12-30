@@ -2,19 +2,14 @@ package io.hektor.core.internal;
 
 import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
+import io.hektor.core.Request;
 import io.hektor.core.internal.messages.Stop;
-import io.hektor.core.internal.messages.Watch;
-import io.netty.util.internal.ConcurrentSet;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -45,6 +40,8 @@ public class ActorBox {
      */
     private final Map<String, ActorRef> children = new HashMap<>();
 
+    private Set<Request> transactions;
+
     /**
      * A list of other actors that is monitoring this one for life-cycle events.
      */
@@ -58,6 +55,17 @@ public class ActorBox {
 
     public static ActorBox create(final MailBox mailBox, final Actor actor, final ActorRef ref) {
         return new ActorBox(mailBox, actor, ref);
+    }
+
+    public void storeRequest(final Request request) {
+        ensureTransactionMap();
+        transactions.add(request);
+    }
+
+    private void ensureTransactionMap() {
+        if (transactions == null) {
+            transactions = new HashSet<>();
+        }
     }
 
     public void tellWatchers(final Object msg) {

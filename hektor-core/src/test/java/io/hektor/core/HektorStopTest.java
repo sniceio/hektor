@@ -52,7 +52,6 @@ public class HektorStopTest extends HektorTestBase {
         assertThat(defaultHektor.lookup(ref.path()).isPresent(), is(false));
     }
 
-
     /**
      * Ensure we can shut down the entire system.
      * @throws Exception
@@ -70,7 +69,6 @@ public class HektorStopTest extends HektorTestBase {
 
         latch001.awaitShutdownLatches();
         latch002.awaitShutdownLatches();
-
     }
 
     /**
