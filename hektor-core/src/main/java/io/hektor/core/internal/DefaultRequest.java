@@ -26,7 +26,7 @@ public class DefaultRequest implements Request<ActorRef> {
         this.transactionId = transactionId;
     }
 
-    public Object getMessage() {
+    public Object getPayload() {
         return msg;
     }
 

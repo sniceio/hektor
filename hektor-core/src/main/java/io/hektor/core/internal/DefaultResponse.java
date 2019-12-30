@@ -31,7 +31,7 @@ public class DefaultResponse implements Response<ActorRef> {
         return isFinal;
     }
 
-    public Object getMessage() {
+    public Object getPayload() {
         return msg;
     }
 

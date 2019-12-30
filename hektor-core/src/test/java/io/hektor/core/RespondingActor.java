@@ -48,7 +48,7 @@ public class RespondingActor implements TransactionalActor {
 
         requests.put(request.getTransactionId().toString(), request);
 
-        final String cmd = (String)request.getMessage();
+        final String cmd = (String)request.getPayload();
         switch (cmd.split(" ")[0]) {
             case "hello":
                 sender().respond("world", request, self());

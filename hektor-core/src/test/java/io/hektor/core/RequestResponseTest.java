@@ -59,14 +59,14 @@ public class RequestResponseTest extends HektorTestBase {
 
         final DefaultRequest request = getRequest(requester);
         assertThat(request, notNullValue());
-        assertThat(request.getMessage(), is("hello"));
+        assertThat(request.getPayload(), is("hello"));
 
         final Map<TransactionId, List<DefaultResponse>> responses = getResponses(requester);
         assertThat(responses.size(), CoreMatchers.is(1));
 
         final DefaultResponse response = responses.values().iterator().next().get(0);
         assertThat(response.isFinal(), is(true));
-        assertThat(response.getMessage(), is("world"));
+        assertThat(response.getPayload(), is("world"));
         assertThat(response.getTransactionId(), is(request.getTransactionId()));
     }
 
@@ -153,7 +153,7 @@ public class RequestResponseTest extends HektorTestBase {
     }
 
     private DefaultRequest findRequest(final Map<TransactionId, Request> requests, final String msg) {
-        return requests.values().stream().map(req -> (DefaultRequest)req).filter(req -> msg.equals(req.getMessage()))
+        return requests.values().stream().map(req -> (DefaultRequest)req).filter(req -> msg.equals(req.getPayload()))
                 .findFirst().orElseThrow(() -> new RuntimeException("Expected to find a Request containing message "
                         + msg + " but didn't"));
     }
@@ -163,7 +163,7 @@ public class RequestResponseTest extends HektorTestBase {
     }
 
     private void assertResponse(final DefaultResponse response, final String expectedMsg, final boolean isFinal) {
-        assertThat(response.getMessage(), is(expectedMsg));
+        assertThat(response.getPayload(), is(expectedMsg));
         assertThat(response.isFinal(), is(isFinal));
     }
 

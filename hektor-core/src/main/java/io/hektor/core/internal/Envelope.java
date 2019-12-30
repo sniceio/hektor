@@ -27,11 +27,11 @@ public class Envelope {
     }
 
     public Envelope(final ActorRef sender, final ActorRef receiver, final Request request) {
-        this(Priority.NORMAL, sender, receiver, ((DefaultRequest)request).getMessage(), null, request, null);
+        this(Priority.NORMAL, sender, receiver, ((DefaultRequest)request).getPayload(), null, request, null);
     }
 
     public Envelope(final ActorRef sender, final ActorRef receiver, final DefaultResponse response) {
-        this(Priority.NORMAL, sender, receiver, response.getMessage(), null, null, response);
+        this(Priority.NORMAL, sender, receiver, response.getPayload(), null, null, response);
     }
 
     public Envelope(final Priority priority, final ActorRef sender, final ActorRef receiver, final Object msg) {
