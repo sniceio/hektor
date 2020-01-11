@@ -2,7 +2,6 @@ package io.hektor.core;
 
 import io.hektor.core.internal.Priority;
 import io.snice.protocol.Request;
-import io.snice.protocol.Response;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -45,25 +44,9 @@ public interface ActorRef {
      * @param sender
      * @return
      */
-    Request<ActorRef> request(Object msg, ActorRef sender);
+    <T> Request<ActorRef, T> request(ActorRef sender, T msg);
 
-    /**
-     * When you respond to a {@link Request}, you must do so via this method, which will ensure that
-     * the underlying transaction is still valid and pass the {@link Response} to the original {@link Actor}.
-     *
-     * @param msg the messege that serves as the actual response to the sender.
-     * @param req the original request, which resulted in the given message to be sent back.
-     * @param isFinal flag indicating if this is the last and final response to the original request.
-     * @return a {@link Response} that represents the message that is sent to the original sender.
-     */
-    Response respond(Object msg, Request req, ActorRef sender, boolean isFinal);
-
-    /**
-     * Convenience method for {@link #respond(Object, Request, ActorRef, boolean)} where isFinal is set to true.
-     */
-    default Response respond(final Object msg, final Request req, final ActorRef sender) {
-        return respond(msg, req, sender, true);
-    }
+    <T> Request<ActorRef, T> request(Request<ActorRef, T> request);
 
     void tell(Object msg, ActorRef sender);
 
@@ -122,14 +105,15 @@ public interface ActorRef {
         }
 
         @Override
-        public Request request(final Object msg, final ActorRef sender) {
+        public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
             throw new RuntimeException("Not yet implemented");
         }
 
         @Override
-        public Response respond(final Object msg, final Request req, final ActorRef sender, final boolean isFinal) {
+        public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
             throw new RuntimeException("Not yet implemented");
         }
+
 
         @Override
         public void tell(final Object msg, final ActorRef sender) {

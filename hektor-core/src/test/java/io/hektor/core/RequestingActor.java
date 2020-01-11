@@ -40,7 +40,7 @@ public class RequestingActor implements TransactionalActor {
                 sender().tell(new HashMap(requests), self());
                 break;
             default:
-                final Request req = respondingActor.request(msg, self());
+                final Request<ActorRef, String> req = respondingActor.request(self(), str);
                 requests.computeIfAbsent(req.getTransactionId(), transaction -> {
                     responses.put(transaction, new ArrayList<>());
                     return req;

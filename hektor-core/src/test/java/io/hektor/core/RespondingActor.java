@@ -1,6 +1,5 @@
 package io.hektor.core;
 
-import io.hektor.core.internal.DefaultRequest;
 import io.snice.protocol.Request;
 
 import java.util.HashMap;
@@ -16,7 +15,7 @@ public class RespondingActor implements TransactionalActor {
         return Props.forActor(RespondingActor.class, () -> new RespondingActor());
     }
 
-    private final Map<String, DefaultRequest> requests = new HashMap<>();
+    private final Map<String, Request> requests = new HashMap<>();
 
     private RespondingActor() {
         // left empty intentionally
@@ -43,18 +42,17 @@ public class RespondingActor implements TransactionalActor {
     }
 
     @Override
-    public void onRequest(final Request req) {
-        final DefaultRequest request = (DefaultRequest)req;
+    public void onRequest(final Request request) {
 
         requests.put(request.getTransactionId().toString(), request);
 
-        final String cmd = (String)request.getPayload();
+        final String cmd = (String)request.getPayload().get();
         switch (cmd.split(" ")[0]) {
             case "hello":
-                sender().respond("world", request, self());
+                // sender().respond("world", request, self());
                 break;
             case "count":
-                sender().respond(count(cmd), request, self());
+                // sender().respond(count(cmd), request, self());
                 break;
             case "start":
                 // just consume this one. We've saved the request (transaction)
@@ -62,7 +60,7 @@ public class RespondingActor implements TransactionalActor {
                 // response we'll do that then...
                 break;
             default:
-                sender().respond("unknown command", request, self());
+                // sender().respond("unknown command", request, self());
         }
     }
 
@@ -77,13 +75,13 @@ public class RespondingActor implements TransactionalActor {
      * @return
      */
     private void processTransaction(final String cmd, final boolean isFinal) {
-        final DefaultRequest request = ensureRequest(cmd.split(" ")[1]);
+        final Request request = ensureRequest(cmd.split(" ")[1]);
         final String msg = cmd.split(" ", 3)[2];
-        request.getOwner().respond(msg, request, self(), isFinal);
+        // request.getOwner().respond(msg, request, self(), isFinal);
     }
 
-    private DefaultRequest ensureRequest(final String transactionId) {
-        final DefaultRequest req = requests.get(transactionId);
+    private Request ensureRequest(final String transactionId) {
+        final Request req = requests.get(transactionId);
         assertNotNull(req);
         return req;
     }

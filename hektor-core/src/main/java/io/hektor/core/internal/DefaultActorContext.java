@@ -6,6 +6,7 @@ import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
 import io.hektor.core.Scheduler;
 import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +43,12 @@ public class DefaultActorContext implements ActorContext {
         bufferedMessages.add(envelope);
     }
 
-    public void buffer(final ActorRef receiver, final ActorRef sender, final Request request) {
+    public void buffer(final ActorRef receiver, final ActorRef sender, final Request<ActorRef, ?> request) {
         final Envelope envelope = new Envelope(sender, receiver, request);
         bufferedMessages.add(envelope);
     }
 
-    public void buffer(final ActorRef receiver, final ActorRef sender, final DefaultResponse response) {
+    public void buffer(final ActorRef receiver, final ActorRef sender, final Response<ActorRef, ?> response) {
         final Envelope envelope = new Envelope(sender, receiver, response);
         bufferedMessages.add(envelope);
     }

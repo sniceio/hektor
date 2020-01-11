@@ -11,7 +11,6 @@ import io.hektor.core.Scheduler;
 import io.hektor.core.internal.messages.Start;
 import io.hektor.core.internal.messages.Watch;
 import io.snice.protocol.Request;
-import io.snice.protocol.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -208,13 +207,13 @@ public final class DefaultHektor implements InternalHektor {
         }
 
         @Override
-        public Request request(final Object msg, final ActorRef sender) {
-            throw new RuntimeException("not yet implemeneted");
+        public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
+            throw new RuntimeException("Not yet implemented");
         }
 
         @Override
-        public Response respond(final Object msg, final Request req, final ActorRef sender, final boolean isFinal) {
-            throw new RuntimeException("not yet implemeneted");
+        public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
+            throw new RuntimeException("Not yet implemented");
         }
 
         @Override

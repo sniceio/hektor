@@ -7,11 +7,10 @@ import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
 import io.hektor.core.internal.messages.Watch;
 import io.snice.protocol.Request;
+import io.snice.protocol.RequestSupport;
 import io.snice.protocol.Response;
 
 import java.util.concurrent.CompletionStage;
-
-import static io.snice.preconditions.PreConditions.assertArgument;
 
 /**
  * @author jonas@jonasborjesson.com
@@ -54,7 +53,7 @@ public class DefaultActorRef implements InternalActorRef {
         return dispatcher.ask(asker, this, msg);
     }
 
-    private void processMessage(final Object msg, final ActorRef sender, final DefaultRequest request, final DefaultResponse response) {
+    private void processMessage(final Object msg, final ActorRef sender, final Request<ActorRef, ?> request, final Response<ActorRef, ?> response) {
         final ActorContext ctx = Actor._ctx.get();
         if (ctx != null) {
             try {
@@ -101,12 +100,19 @@ public class DefaultActorRef implements InternalActorRef {
     }
 
     @Override
-    public Request<ActorRef> request(final Object msg, final ActorRef sender) {
-        final DefaultRequest req = DefaultRequest.create(sender, msg);
+    public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
+        final Request<ActorRef, T> req = RequestSupport.create(sender, msg);
         processMessage(null, sender, req, null);
         return req;
     }
 
+    @Override
+    public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
+        processMessage(null, request.getOwner(), request, null);
+        return request;
+    }
+
+    /*
     @Override
     public Response respond(final Object msg, final Request req, final ActorRef sender, final boolean isFinal) {
         final DefaultRequest request = (DefaultRequest)req;
@@ -118,6 +124,7 @@ public class DefaultActorRef implements InternalActorRef {
         processMessage(null, sender, null, response);
         return response;
     }
+    */
 
     @Override
     public void tell(final Priority priority, final Object msg, final ActorRef sender) {
