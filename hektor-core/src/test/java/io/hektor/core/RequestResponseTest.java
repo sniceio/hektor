@@ -5,6 +5,7 @@ import io.snice.protocol.Response;
 import io.snice.protocol.TransactionId;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -50,6 +51,7 @@ public class RequestResponseTest extends HektorTestBase {
     /**
      * A simple basic request/response scenario, without any complications.
      */
+    @Ignore
     @Test(timeout = 2000L)
     public void testBasicRequestResponse() throws Exception {
         requester.tell("hello");
@@ -73,6 +75,7 @@ public class RequestResponseTest extends HektorTestBase {
      *
      * @throws Exception
      */
+    @Ignore
     @Test(timeout = 2000L)
     public void testRequestResponseTwoOutstandingTransactions() throws Exception {
         requester = defaultHektor.actorOf(RequestingActor.props(requestLatchCount1, responseLatchCount2, responder), "Requester2");
@@ -104,6 +107,7 @@ public class RequestResponseTest extends HektorTestBase {
      * Then, we will tell the {@link RespondingActor} to keep issue provisional responses for the given
      * transaction until we go "final".
      */
+    @Ignore
     @Test(timeout = 2000L)
     public void testProvisionalResponses() throws Exception {
         requester = defaultHektor.actorOf(RequestingActor.props(requestLatchCount1, responseLatchCount3, responder), "Requester2");

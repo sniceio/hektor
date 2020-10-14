@@ -1,8 +1,5 @@
 package io.hektor.core;
 
-import com.sun.org.apache.xml.internal.dtm.ref.sax2dtm.SAX2DTM2;
-import io.hektor.core.internal.PreConditions;
-
 import java.util.Optional;
 import java.util.function.Supplier;
 
