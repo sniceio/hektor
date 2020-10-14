@@ -6,14 +6,16 @@ import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
 import io.hektor.core.internal.messages.Watch;
+import io.snice.protocol.Request;
+import io.snice.protocol.RequestSupport;
+import io.snice.protocol.Response;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
  * @author jonas@jonasborjesson.com
  */
-public class DefaultActorRef implements ActorRef {
+public class DefaultActorRef implements InternalActorRef {
 
     /**
      * The path to the actor.
@@ -34,19 +36,7 @@ public class DefaultActorRef implements ActorRef {
 
     @Override
     public void tell(final Object msg, final ActorRef sender) {
-        final ActorContext ctx = Actor._ctx.get();
-        if (ctx != null) {
-            try {
-                final DefaultActorContext bufCtx = (DefaultActorContext) ctx;
-                bufCtx.buffer(msg, this, sender);
-            } catch (final ClassCastException e) {
-                // ignore. shouldn't happen but if it does
-                // then just dispatch the message.
-                dispatcher.dispatch(sender, this, msg);
-            }
-        } else {
-            dispatcher.dispatch(sender, this, msg);
-        }
+        processMessage(msg, sender, null, null);
     }
 
     @Override
@@ -63,8 +53,81 @@ public class DefaultActorRef implements ActorRef {
         return dispatcher.ask(asker, this, msg);
     }
 
+    private void processMessage(final Object msg, final ActorRef sender, final Request<ActorRef, ?> request, final Response<ActorRef, ?> response) {
+        final ActorContext ctx = Actor._ctx.get();
+        if (ctx != null) {
+            try {
+                final DefaultActorContext bufCtx = (DefaultActorContext) ctx;
+                if (msg != null) {
+                    bufCtx.buffer(msg, this, sender);
+                } else if(request != null) {
+                    bufCtx.buffer(this, sender, request);
+                } else if(response != null) {
+                    bufCtx.buffer(this, sender, response);
+                } else {
+                    // error
+                    throw new Error("Hektor Internal Error - one of the msg, Request or Response must be set. " +
+                            "Seems like a bug");
+                }
+            } catch (final ClassCastException e) {
+                // ignore. shouldn't happen but if it does
+                // then just dispatch the message.
+                dispatcher.dispatch(sender, this, msg);
+            }
+        } else {
+            // if the actor context is null, that means that this actor ref is
+            // accessed outside of an actor "invocation" (meaning outside of e.g.
+            // onReceive, the constructor etc etc) and as such, we'll just
+            // hand it off to the dispatcher to take care of it.
+            dispatcher.dispatch(sender, this, msg);
+        }
+    }
+
+
     @Override
-    public void tell(Priority priority, Object msg, ActorRef sender) {
+    public void dispatch(final Object msg, final ActorRef sender) {
+        dispatcher.dispatch(sender, this, msg);
+    }
+
+    @Override
+    public void dispatch(final Request request, final ActorRef sender) {
+        dispatcher.dispatch(sender, this, request);
+    }
+
+    @Override
+    public void dispatch(final Response response, final ActorRef sender) {
+        dispatcher.dispatch(sender, this, response);
+    }
+
+    @Override
+    public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
+        final Request<ActorRef, T> req = RequestSupport.create(sender, msg);
+        processMessage(null, sender, req, null);
+        return req;
+    }
+
+    @Override
+    public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
+        processMessage(null, request.getOwner(), request, null);
+        return request;
+    }
+
+    /*
+    @Override
+    public Response respond(final Object msg, final Request req, final ActorRef sender, final boolean isFinal) {
+        final DefaultRequest request = (DefaultRequest)req;
+        assertArgument(request.getOwner().equals(this), "You must send the response to the same actor that " +
+                "initiated the original request. You tried to send the response to " +
+                this + "but the actor who sent the request is " + request.getOwner());
+
+        final DefaultResponse response = request.createResponse().withMessage(msg).isFinal(isFinal).build();
+        processMessage(null, sender, null, response);
+        return response;
+    }
+    */
+
+    @Override
+    public void tell(final Priority priority, final Object msg, final ActorRef sender) {
         tell(msg, sender);
     }
 

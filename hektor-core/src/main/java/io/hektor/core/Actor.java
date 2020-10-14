@@ -77,4 +77,14 @@ public interface Actor {
      * @param msg
      */
     void onReceive(Object msg);
+
+    default boolean hasTransactionalSupport() {
+        return false;
+    }
+
+    default TransactionalActor toTransactionalActor() {
+        throw new ClassCastException("Unable to cast " + getClass().getName()
+                + " to " + TransactionalActor.class.getName());
+    }
+
 }

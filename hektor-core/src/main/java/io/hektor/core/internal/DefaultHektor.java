@@ -9,8 +9,8 @@ import io.hektor.core.Props;
 import io.hektor.core.RoutingLogic;
 import io.hektor.core.Scheduler;
 import io.hektor.core.internal.messages.Start;
-import io.hektor.core.internal.messages.Stop;
 import io.hektor.core.internal.messages.Watch;
+import io.snice.protocol.Request;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +60,7 @@ public final class DefaultHektor implements InternalHektor {
     public ActorRef actorOf(final ActorPath parent, final String name, final Props props) {
         final ActorPath path = parent.createChild(name);
         final InternalDispatcher dispatcher = findDispatcher(path, props);
-        final ActorRef ref = new DefaultActorRef(path, dispatcher);
+        final InternalActorRef ref = new DefaultActorRef(path, dispatcher);
 
         final ActorContext oldCtx = Actor._ctx.get();
         try {
@@ -72,7 +72,7 @@ public final class DefaultHektor implements InternalHektor {
             Actor._ctx.set(oldCtx);
         }
 
-        ref.tell(Priority.HIGH, Start.MSG, ref);
+        ref.dispatch(Start.MSG, ref);
         return ref;
     }
 
@@ -160,7 +160,7 @@ public final class DefaultHektor implements InternalHektor {
         }
 
         @Override
-        public RouterBuilder withRoutingLogic(RoutingLogic logic) {
+        public RouterBuilder withRoutingLogic(final RoutingLogic logic) {
             routingLogic = logic;
             return this;
         }
@@ -207,6 +207,16 @@ public final class DefaultHektor implements InternalHektor {
         }
 
         @Override
+        public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
+        public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
         public void tell(final Priority priority, final Object msg, final ActorRef sender) {
             final ActorRef receiver = routingLogic.select(msg, actors);
             receiver.tell(priority, msg, sender);
@@ -220,7 +230,7 @@ public final class DefaultHektor implements InternalHektor {
         }
 
         @Override
-        public void monitor(ActorRef ref) {
+        public void monitor(final ActorRef ref) {
             throw new RuntimeException("Sorry, not implemented just yet");
         }
 

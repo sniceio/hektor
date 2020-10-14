@@ -1,6 +1,7 @@
 package io.hektor.core;
 
 import io.hektor.core.internal.Priority;
+import io.snice.protocol.Request;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -31,7 +32,21 @@ public interface ActorRef {
      */
     CompletionStage<Object> ask(Object msg, ActorRef sender) throws IllegalArgumentException;
 
-    // <T> CompletionStage<T> ask(Object msg, ActorRef sender, Function<Object, T> transform) throws IllegalArgumentException;
+    default CompletionStage<Object> ask(final Object msg) {
+        return ask(msg, this);
+    }
+
+    /**
+     * If you request information from another {@link Actor}, you are expecting a response and you want to
+     * track this interaction.
+     *
+     * @param msg
+     * @param sender
+     * @return
+     */
+    <T> Request<ActorRef, T> request(ActorRef sender, T msg);
+
+    <T> Request<ActorRef, T> request(Request<ActorRef, T> request);
 
     void tell(Object msg, ActorRef sender);
 
@@ -88,6 +103,17 @@ public interface ActorRef {
         public CompletionStage<Object> ask(final Object msg, final ActorRef sender) {
             return NO_FUTURE;
         }
+
+        @Override
+        public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
+        public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
 
         @Override
         public void tell(final Object msg, final ActorRef sender) {

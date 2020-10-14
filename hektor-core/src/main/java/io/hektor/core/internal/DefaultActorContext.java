@@ -5,6 +5,8 @@ import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
 import io.hektor.core.Scheduler;
+import io.snice.protocol.Request;
+import io.snice.protocol.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +29,7 @@ public class DefaultActorContext implements ActorContext {
 
     private boolean stop;
 
-    private List<Envelope> bufferedMessages = new ArrayList<>(3);
+    private final List<Envelope> bufferedMessages = new ArrayList<>(3);
 
     public DefaultActorContext(final InternalHektor hektor, final ActorBox self, final ActorRef sender) {
         assertNotNull(sender);
@@ -41,9 +43,19 @@ public class DefaultActorContext implements ActorContext {
         bufferedMessages.add(envelope);
     }
 
+    public void buffer(final ActorRef receiver, final ActorRef sender, final Request<ActorRef, ?> request) {
+        final Envelope envelope = new Envelope(sender, receiver, request);
+        bufferedMessages.add(envelope);
+    }
+
+    public void buffer(final ActorRef receiver, final ActorRef sender, final Response<ActorRef, ?> response) {
+        final Envelope envelope = new Envelope(sender, receiver, response);
+        bufferedMessages.add(envelope);
+    }
+
     public CompletionStage<Object> ask(final Object msg, final ActorRef receiver) {
         final CompletableFuture<Object> future = new CompletableFuture<>();
-        final Envelope envelope = new Envelope(Priority.NORMAL, ActorRef.None(), receiver, msg, future);
+        final Envelope envelope = new Envelope(Priority.NORMAL, ActorRef.None(), receiver, msg, future, null, null);
         bufferedMessages.add(envelope);
         return future;
     }

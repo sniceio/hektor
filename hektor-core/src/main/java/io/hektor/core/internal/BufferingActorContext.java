@@ -5,6 +5,7 @@ import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
 import io.hektor.core.Scheduler;
+import io.snice.protocol.Request;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +36,7 @@ public class BufferingActorContext implements ActorContext {
      * We will intercept all attempts to send messages between actors
      * during an actor invocation. The DefaultActorRef will
      */
-    private List<Envelope> messages;
+    private final List<Envelope> messages;
 
     private final InternalHektor hektor;
 
@@ -140,7 +141,7 @@ public class BufferingActorContext implements ActorContext {
     }
 
     @Override
-    public Optional<ActorRef> lookup(ActorPath path) {
+    public Optional<ActorRef> lookup(final ActorPath path) {
         return hektor.lookupActorBox(path).map(ActorBox::ref);
     }
 
@@ -202,12 +203,22 @@ public class BufferingActorContext implements ActorContext {
         }
 
         @Override
+        public <T> Request<ActorRef, T> request(final ActorRef sender, final T msg) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
+        public <T> Request<ActorRef, T> request(final Request<ActorRef, T> request) {
+            throw new RuntimeException("Not yet implemented");
+        }
+
+        @Override
         public void tell(final Object msg, final ActorRef sender) {
             tell(Priority.NORMAL, msg, sender);
         }
 
         @Override
-        public void tell(Priority priority, Object msg, ActorRef sender) {
+        public void tell(final Priority priority, final Object msg, final ActorRef sender) {
             ensureList();
 
             // make sure to unwrap the sender if it is of
@@ -231,7 +242,7 @@ public class BufferingActorContext implements ActorContext {
         }
 
         @Override
-        public void monitor(ActorRef ref) {
+        public void monitor(final ActorRef ref) {
             throw new RuntimeException("Sorry, not implemented just yet");
         }
     }
