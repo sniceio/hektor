@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
+import static io.snice.preconditions.PreConditions.assertNotNull;
+
 /**
  * @author jonas@jonasborjesson.com
  */
@@ -26,13 +28,41 @@ public interface Hektor {
     }
 
     /**
+     * Deprecated. Use {@link #actorOf(String, Props)} instead. The only difference - the
+     * parameters are swapped around (to be consistent with other variants)
+     *
+     * @param props
+     * @param name
+     * @return
+     */
+    @Deprecated
+    default ActorRef actorOf(final Props props, final String name) {
+        return actorOf(name, props);
+    }
+
+    /**
      * Create a top-level actor.
      *
      * @param props
      * @param name the name under which the Actor will be registered.
      * @return
      */
-    ActorRef actorOf(Props props, String name);
+    ActorRef actorOf(String name, Props props);
+
+    /**
+     * Create an actor under the given {@link ActorPath}. I.e., create a child actor.
+     *
+     * @param parent the parent actor of the new child
+     * @param name the name of the child actor.
+     * @param props
+     * @return
+     */
+    ActorRef actorOf(final ActorPath parent, final String name, final Props props);
+
+    default ActorRef actorOf(final ActorRef parent, final String name, final Props props) {
+        assertNotNull(parent, "The ActorRef of the parent cannot be null");
+        return actorOf(parent.path(), name, props);
+    }
 
     /**
      * Obtain the system scheduler that can be used to schedule messages
@@ -104,7 +134,7 @@ public interface Hektor {
 
         public Hektor build() {
             final HektorConfiguration config = ensureConfiguration();
-            MetricRegistry registry = metricRegistry != null ? metricRegistry : new MetricRegistry();
+            final MetricRegistry registry = metricRegistry != null ? metricRegistry : new MetricRegistry();
             final Map<String, DispatcherConfiguration> dispatcherConfigs = config.dispatchers();
             if (actorStore == null) {
                 actorStore = new SimpleActorStore();

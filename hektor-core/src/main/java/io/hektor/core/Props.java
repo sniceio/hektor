@@ -3,7 +3,7 @@ package io.hektor.core;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static io.hektor.core.internal.PreConditions.assertNotNull;
+import static io.snice.preconditions.PreConditions.assertNotNull;
 
 /**
  * @author jonas@jonasborjesson.com

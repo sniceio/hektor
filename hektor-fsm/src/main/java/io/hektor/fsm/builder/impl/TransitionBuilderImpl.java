@@ -14,7 +14,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.hektor.fsm.PreConditions.ensureNotNull;
+import static io.snice.preconditions.PreConditions.ensureNotNull;
+
 
 /**
  * @author jonas@jonasborjesson.com

@@ -1,6 +1,6 @@
 package io.hektor.core.internal.messages;
 
-import static io.hektor.core.internal.PreConditions.assertNotNull;
+import static io.snice.preconditions.PreConditions.assertNotNull;
 
 /**
  * Internal message for indicating that an actor has fully stopped. This message

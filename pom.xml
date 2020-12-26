@@ -58,6 +58,7 @@
         <module>hektor-core</module>
         <module>hektor-fsm</module>
         <module>hektor-actors</module>
+        <module>hektor-actor-fsm</module>
         <module>hektor-micro-benchmark</module>
     </modules>
 
@@ -81,6 +82,13 @@
             <dependency>
                 <groupId>io.hektor</groupId>
                 <artifactId>hektor-fsm</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.hektor</groupId>
+                <artifactId>hektor-actor-fsm</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>

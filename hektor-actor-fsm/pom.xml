@@ -10,22 +10,31 @@
         <version>0.0.4-SNAPSHOT</version>
     </parent>
 
-    <name>Hektor Finite State Machine</name>
-    <artifactId>hektor-fsm</artifactId>
+    <name>Hektor Actor FSM Support</name>
+    <artifactId>hektor-actor-fsm</artifactId>
     <packaging>jar</packaging>
-    <description />
+    <description>Support for running an FSM within an Actor</description>
 
     <dependencies>
 
-        <!--
-            <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-core</artifactId>
-            </dependency>
-        -->
         <dependency>
             <groupId>io.snice</groupId>
             <artifactId>snice-commons</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.hektor</groupId>
+            <artifactId>hektor-actors</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.hektor</groupId>
+            <artifactId>hektor-fsm</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -37,13 +46,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${sl4j.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
