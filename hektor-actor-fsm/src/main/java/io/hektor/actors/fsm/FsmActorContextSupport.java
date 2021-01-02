@@ -1,7 +1,6 @@
 package io.hektor.actors.fsm;
 
 import io.hektor.core.ActorContext;
-import io.hektor.core.ActorRef;
 import io.hektor.fsm.Context;
 
 /**
@@ -11,17 +10,9 @@ import io.hektor.fsm.Context;
  */
 public interface FsmActorContextSupport {
 
-    ThreadLocal<ActorContext> _ctx = new ThreadLocal<>();
+    ThreadLocal<FsmActorContextAdaptor> _ctx = new ThreadLocal<>();
 
-    default ActorRef self() {
-        return _ctx.get().self();
-    }
-
-    default ActorRef sender() {
-        return _ctx.get().sender();
-    }
-
-    default ActorContext ctx() {
-        return _ctx.get();
+    default void tellSubscribers(final Object msg) {
+        _ctx.get().tellSubscribers(msg);
     }
 }

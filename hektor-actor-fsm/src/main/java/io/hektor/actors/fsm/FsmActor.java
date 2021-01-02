@@ -1,9 +1,12 @@
 package io.hektor.actors.fsm;
 
 import io.hektor.actors.LoggingSupport;
+import io.hektor.actors.SubscriptionManagementSupport;
+import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Props;
+import io.hektor.core.Scheduler;
 import io.hektor.core.TransactionalActor;
 import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
@@ -12,6 +15,9 @@ import io.hektor.fsm.FSM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -23,7 +29,7 @@ import static io.snice.preconditions.PreConditions.ensureNotNull;
  * execution environment for your FSM, default handling of logging etc.
  *
  */
-public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data> implements TransactionalActor, LoggingSupport {
+public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data> extends SubscriptionManagementSupport implements TransactionalActor, LoggingSupport {
 
     private static final Logger logger = LoggerFactory.getLogger(FsmActor.class);
 
@@ -53,6 +59,7 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
                      final Supplier<D> data,
                      final OnStartFunction<C, D> onStart,
                      final OnStopFunction<C, D> onStop) {
+        super(false);
         this.definition = definition;
         this.contextSupplier = context;
         this.dataSupplier = data;
@@ -86,10 +93,12 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
     }
 
     @Override
-    public void onReceive(final Object msg) {
-        final var adapter = new FsmSchedulerAdaptor(ctx().scheduler(), self());
-        Context._scheduler.set(adapter);
-        FsmActorContextSupport._ctx.set(ctx()); // only matters if the Context actually is implementing this support interface
+    protected void onEvent(final Object msg) {
+        final var ctx = ctx();
+        final var ctxAdaptor = new FsmActorContextAdaptorSupport(ctx);
+        final var schedulerAdaptor = new FsmSchedulerAdaptor(ctx().scheduler(), self());
+        Context._scheduler.set(schedulerAdaptor);
+        FsmActorContextSupport._ctx.set(ctxAdaptor); // only matters if the Context actually is implementing this support interface
         try {
             fsm.onEvent(msg);
             if (fsm.isTerminated()) {
@@ -98,6 +107,7 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
         } finally {
             FsmActorContextSupport._ctx.remove();
             Context._scheduler.remove();
+            ctxAdaptor.processMessages(this);
         }
     }
 
@@ -207,5 +217,98 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
             return (actorCtx, ctx, data) -> {};
         }
 
+    }
+
+    private class FsmActorContextAdaptorSupport implements FsmActorContextAdaptor {
+
+        private final ActorContext ctx;
+        private Object msg;
+        private List<Object> messages;
+
+        private FsmActorContextAdaptorSupport(final ActorContext ctx) {
+            this.ctx = ctx;
+        }
+
+        @Override
+        public ActorRef self() {
+            return ctx.self();
+        }
+
+        @Override
+        public void stop() {
+            ctx.stop();
+        }
+
+        @Override
+        public Optional<ActorRef> lookup(final String path) {
+            return ctx.lookup(path);
+        }
+
+        @Override
+        public Optional<ActorRef> lookup(final ActorPath path) {
+            return ctx.lookup(path);
+        }
+
+        @Override
+        public Scheduler scheduler() {
+            return ctx.scheduler();
+        }
+
+        @Override
+        public Optional<ActorRef> child(final String child) {
+            return ctx.child(child);
+        }
+
+        @Override
+        public void stash() {
+            ctx.stash();
+        }
+
+        @Override
+        public void unstash() {
+            ctx.unstash();
+        }
+
+        @Override
+        public ActorRef actorOf(final String name, final Props props) {
+            return ctx.actorOf(name, props);
+        }
+
+        @Override
+        public ActorRef sender() {
+            return ctx.sender();
+        }
+
+        @Override
+        public void tellSubscribers(final Object msg) {
+            if (this.msg == null) {
+                this.msg = msg;
+            } else {
+                ensureMessageList().add(msg);
+            }
+        }
+
+        private List<Object> ensureMessageList() {
+            if (messages == null) {
+                messages = new ArrayList<>(5);
+            }
+            return messages;
+        }
+
+        /**
+         * Process all the buffered "tell subscriber" messages.
+         */
+        private void processMessages(final FsmActor actor) {
+            if (msg == null) {
+                return;
+            }
+
+            actor.tellSubscribers(msg);
+            msg = null;
+            if (messages != null) {
+                messages.forEach(actor::tellSubscribers);
+                messages = null;
+            }
+        }
     }
 }
