@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static io.hektor.fsm.PreConditions.ensureNotNull;
+import static io.snice.preconditions.PreConditions.ensureNotNull;
 
 /**
  * @author jonas@jonasborjesson.com

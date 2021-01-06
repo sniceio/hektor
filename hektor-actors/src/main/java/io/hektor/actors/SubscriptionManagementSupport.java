@@ -49,7 +49,7 @@ public abstract class SubscriptionManagementSupport implements Actor, LoggingSup
     }
 
     @Override
-    public void onReceive(final Object msg) {
+    public final void onReceive(final Object msg) {
 
         if (msg instanceof SubscriptionManagementEvent) {
             processSubscriptionManagementEvent((SubscriptionManagementEvent)msg);

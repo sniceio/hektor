@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import static io.hektor.core.internal.PreConditions.assertNotNull;
+import static io.snice.preconditions.PreConditions.assertNotNull;
 
 /**
  * @author jonas@jonasborjesson.com

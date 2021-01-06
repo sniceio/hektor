@@ -13,7 +13,7 @@ import io.snice.protocol.Response;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static io.hektor.core.internal.PreConditions.assertNotNull;
+import static io.snice.preconditions.PreConditions.assertNotNull;
 
 /**
  * Every message that is being passed to an actor is by default going through

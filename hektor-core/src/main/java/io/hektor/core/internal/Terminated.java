@@ -2,7 +2,7 @@ package io.hektor.core.internal;
 
 import io.hektor.core.ActorPath;
 
-import static io.hektor.core.internal.PreConditions.assertNotNull;
+import static io.snice.preconditions.PreConditions.assertNotNull;
 
 /**
  * A message indicating that the actor identified by the path has been terminated.

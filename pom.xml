@@ -44,20 +44,21 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <snice.version>0.1.5-SNAPSHOT</snice.version>
+        <snice-commons.version>0.1.8</snice-commons.version>
         <sl4j.version>1.7.25</sl4j.version>
         <logback.version>1.2.3</logback.version>
         <mockito.version>1.9.5</mockito.version>
         <junit.version>4.13.1</junit.version>
         <jackson.version>2.10.1</jackson.version>
         <metrics.version>3.1.0</metrics.version>
-        <netty.version>4.1.30.Final</netty.version>
+        <netty.version>4.1.43.Final</netty.version>
     </properties>
 
     <modules>
         <module>hektor-core</module>
         <module>hektor-fsm</module>
         <module>hektor-actors</module>
+        <module>hektor-actor-fsm</module>
         <module>hektor-micro-benchmark</module>
     </modules>
 
@@ -86,16 +87,23 @@
             </dependency>
 
             <dependency>
+                <groupId>io.hektor</groupId>
+                <artifactId>hektor-actor-fsm</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>io.snice</groupId>
                 <artifactId>snice-commons</artifactId>
-                <version>${snice.version}</version>
+                <version>${snice-commons.version}</version>
                 <scope>compile</scope>
             </dependency>
 
             <dependency>
                 <groupId>io.snice</groupId>
                 <artifactId>snice-buffers</artifactId>
-                <version>${snice.version}</version>
+                <version>${snice-commons.version}</version>
                 <scope>compile</scope>
             </dependency>
 

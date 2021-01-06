@@ -47,7 +47,7 @@ public final class DefaultHektor implements InternalHektor {
     }
 
     @Override
-    public ActorRef actorOf(final Props props, final String name) {
+    public ActorRef actorOf(final String name, final Props props) {
         return actorOf(root, name, props);
     }
 

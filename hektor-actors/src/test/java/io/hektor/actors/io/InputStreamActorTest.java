@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class InputStreamActorTest extends HektorTestBase {
 
@@ -42,7 +42,7 @@ public class InputStreamActorTest extends HektorTestBase {
 
         final InputStream is = loadStream("lorem_ipsum.txt");
         final CountDownLatch latch = new CountDownLatch(1);
-        final ActorRef recv = defaultHektor.actorOf(TokenReceiverActor.props(latch, is, threadPool), "receiver");
+        final ActorRef recv = defaultHektor.actorOf("receiver", TokenReceiverActor.props(latch, is, threadPool));
 
         // the TokenReceiverActor waits for the death event of the InputStreamActor
         // and when receiving that one, it will decrease the latch which then means that
