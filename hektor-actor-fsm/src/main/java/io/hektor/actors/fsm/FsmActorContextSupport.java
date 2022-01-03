@@ -15,4 +15,8 @@ public interface FsmActorContextSupport {
     default void tellSubscribers(final Object msg) {
         _ctx.get().tellSubscribers(msg);
     }
+
+    default ActorContext ctx() {
+        return _ctx.get();
+    }
 }
