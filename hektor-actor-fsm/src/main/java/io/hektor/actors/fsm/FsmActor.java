@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -78,7 +79,9 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
         onStart.start(ctx(), context, data);
 
         fsm = definition.newInstance(getUUID(), context, data, this::unhandledEvent, this::onTransition);
-        fsm.start();
+
+        invokeFsm((ignore) -> fsm.start(), null);
+
     }
 
     @Override
@@ -94,21 +97,7 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
 
     @Override
     protected void onEvent(final Object msg) {
-        final var ctx = ctx();
-        final var ctxAdaptor = new FsmActorContextAdaptorSupport(ctx);
-        final var schedulerAdaptor = new FsmSchedulerAdaptor(ctx().scheduler(), self());
-        Context._scheduler.set(schedulerAdaptor);
-        FsmActorContextSupport._ctx.set(ctxAdaptor); // only matters if the Context actually is implementing this support interface
-        try {
-            fsm.onEvent(msg);
-            if (fsm.isTerminated()) {
-                ctx().stop();
-            }
-        } finally {
-            FsmActorContextSupport._ctx.remove();
-            Context._scheduler.remove();
-            ctxAdaptor.processMessages(this);
-        }
+        invokeFsm((o) -> fsm.onEvent(o), msg);
     }
 
     public void unhandledEvent(final S state, final Object o) {
@@ -117,6 +106,24 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
 
     public void onTransition(final S currentState, final S toState, final Object event) {
         logInfo("{} -> {} Event: {}", currentState, toState, format(event));
+    }
+
+    private void invokeFsm(final Consumer<Object> exec, final Object msg) {
+        final var ctx = ctx();
+        final var ctxAdaptor = new FsmActorContextAdaptorSupport(ctx);
+        final var schedulerAdaptor = new FsmSchedulerAdaptor(ctx().scheduler(), self());
+        Context._scheduler.set(schedulerAdaptor);
+        FsmActorContextSupport._ctx.set(ctxAdaptor); // only matters if the Context actually is implementing this support interface
+        try {
+            exec.accept(msg);
+            if (fsm.isTerminated()) {
+                ctx().stop();
+            }
+        } finally {
+            FsmActorContextSupport._ctx.remove();
+            Context._scheduler.remove();
+            ctxAdaptor.processMessages(this);
+        }
     }
 
     /**
