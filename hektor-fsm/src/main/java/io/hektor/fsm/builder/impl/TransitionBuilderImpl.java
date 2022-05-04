@@ -38,7 +38,16 @@ public class TransitionBuilderImpl<E extends Object, S extends Enum<S>, C extend
     private Predicate<E> guard;
     private Guard<E, C, D> richerGuard;
 
+    /**
+     * A "simple" action that only takes the event that was processed by the FSM and that triggered
+     * this transition. Compare with the "stateful" action below.
+     */
     private Consumer<E> action;
+
+    /**
+     * A so-called stateful action is an action that not only accept the event but also the {@link Context}
+     * and the {@link Data}-bag.
+     */
     private Action<E, C, D> statefulAction;
 
     /**
