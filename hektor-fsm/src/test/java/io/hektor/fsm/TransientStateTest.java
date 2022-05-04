@@ -20,9 +20,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -101,6 +102,56 @@ public class TransientStateTest {
 
         fsm.onEvent("exit");
         assertThat(fsm.isTerminated(), is(true));
+    }
+
+    /**
+     * Ensure that the so-called "self" enter action is triggered only on self enter.
+     */
+    @Test
+    public void testSelfEnterAction() {
+        final CountDownLatch enterActionLatch = mock(CountDownLatch.class);
+        final CountDownLatch selfEnterActionLatch = mock(CountDownLatch.class);
+
+        b = builder.withState(SuperSimpleStates.B);
+        c = builder.withState(SuperSimpleStates.C);
+
+        b.withSelfEnterAction((ctx, data) -> selfEnterActionLatch.countDown());
+        b.withEnterAction((ctx, data) -> enterActionLatch.countDown());
+
+        a.transitionTo(SuperSimpleStates.B).onEvent(String.class);
+        b.transitionTo(SuperSimpleStates.B).onEvent(String.class).withGuard("self"::equals);
+        b.transitionTo(SuperSimpleStates.H).onEvent(String.class).withGuard("exit"::equals);
+        b.transitionTo(SuperSimpleStates.C).onEvent(String.class).withGuard("C"::equals);
+        c.transitionTo(SuperSimpleStates.B).onEvent(String.class).withGuard("B"::equals);
+
+
+        go("start");
+
+        // self should NOT have been called at this point but the "regular" enter action should have been.
+        verify(selfEnterActionLatch, never()).countDown();
+        verify(enterActionLatch).countDown();
+
+        fsm.onEvent("self");
+
+        // Now the self should have been triggered but the regular not so that one is still at one invocation
+        verify(selfEnterActionLatch).countDown();
+        verify(enterActionLatch).countDown();
+
+        // two self and then B -> C -> B, which should not trigger the "self" but the regular on Enter...
+        fsm.onEvent("self");
+        fsm.onEvent("self");
+        fsm.onEvent("C");
+        fsm.onEvent("B");
+        verify(selfEnterActionLatch, times(3)).countDown();
+        verify(enterActionLatch, times(2)).countDown();
+
+        // another "self" and then we're out.
+        fsm.onEvent("self");
+        fsm.onEvent("exit");
+        assertThat(fsm.isTerminated(), is(true));
+
+        verify(selfEnterActionLatch, times(4)).countDown();
+        verify(enterActionLatch, times(2)).countDown();
     }
 
 

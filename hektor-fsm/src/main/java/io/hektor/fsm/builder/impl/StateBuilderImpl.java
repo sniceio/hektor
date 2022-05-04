@@ -50,6 +50,14 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
      * never ever be executed again.
      */
     private BiConsumer<C, D> initialEnterAction;
+
+
+    /**
+     * The "self" enter action is an action that is triggered when you transition
+     * to/from the very same state, such as from state B back to state B.
+     */
+    private BiConsumer<C, D> selfEnterAction;
+
     private BiConsumer<C, D> enterAction;
     private BiConsumer<C, D> exitAction;
 
@@ -81,6 +89,12 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
     @Override
     public StateBuilderImpl<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action) {
         initialEnterAction = action;
+        return this;
+    }
+
+    @Override
+    public StateBuilderImpl<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action) {
+        selfEnterAction = action;
         return this;
     }
 
@@ -185,7 +199,7 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
 
         final List<Transition<?, S, C, D>> ts = transitions.stream().map(TransitionBuilder::build).collect(Collectors.toList());
         final Optional<Transition<Object, S, C, D>> defaultTs = Optional.ofNullable(defaultTransition == null ? null : defaultTransition.build());
-        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts, defaultTs, initialEnterAction, enterAction, exitAction);
+        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts, defaultTs, initialEnterAction, selfEnterAction, enterAction, exitAction);
     }
 
 

@@ -12,6 +12,12 @@ public interface StateBuilder<S extends Enum<S>, C extends Context, D extends Da
 
     /**
      * Register an action that will be executed upon entering this state.
+     * This action is ONLY executed when you enter the action from another state. I.e.,
+     * on a transition A -> B, B's enter action would be triggered. However, if you transition
+     * between the same state, so e.g. B -> B, then this enter action will NOT trigger.
+     *
+     * If you wish to trigger an action on "self enter", then use {@link #withSelfEnterAction(BiConsumer)}.
+     *
      */
     StateBuilder<S, C, D> withEnterAction(final BiConsumer<C, D> action);
 
@@ -42,6 +48,15 @@ public interface StateBuilder<S extends Enum<S>, C extends Context, D extends Da
      * @return
      */
     StateBuilder<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action);
+
+    /**
+     * Register an action that will trigger when you transition to/from the same state.
+     * I.e., this action would trigger when you transitioned from B -> B but not A -> B.
+     *
+     * @param action
+     * @return
+     */
+    StateBuilder<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action);
 
     /**
      * Register an action that will be executed upon exiting this state.

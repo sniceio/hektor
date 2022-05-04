@@ -144,6 +144,10 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
             if (currentState.getState() != toState) {
                 exitCurrentState();
                 enterState(toState);
+            } else {
+                // "self" transition. I.e. State B -> State B
+                final Optional<BiConsumer<C, D>> action = currentState.getSelfEnterAction();
+                action.ifPresent(a -> a.accept(ctx, data));
             }
 
         } catch(final Throwable t) {

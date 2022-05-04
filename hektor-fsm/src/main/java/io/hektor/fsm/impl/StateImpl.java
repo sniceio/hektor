@@ -25,6 +25,7 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     private final List<Transition<?, S, C, D>> transitions;
     private final Optional<Transition<?, S, C, D>> defaultTransition;
     private final Optional<BiConsumer<C, D>> initialEnterAction;
+    private final Optional<BiConsumer<C, D>> selfEnterAction;
     private final Optional<BiConsumer<C, D>> enterAction;
     private final Optional<BiConsumer<C, D>> exitAction;
 
@@ -37,6 +38,7 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
                      final List<Transition<?, S, C, D>> transitions,
                      final Optional<Transition<?, S, C, D>> defaultTransition,
                      final BiConsumer<C, D> initialEnterAction,
+                     final BiConsumer<C, D> selfEnterAction,
                      final BiConsumer<C, D> enterAction,
                      final BiConsumer<C, D> exitAction) {
         this.state = state;
@@ -46,6 +48,7 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
         this.transitions = transitions;
         this.defaultTransition = defaultTransition;
         this.initialEnterAction = Optional.ofNullable(initialEnterAction);
+        this.selfEnterAction = Optional.ofNullable(selfEnterAction);
         this.enterAction = Optional.ofNullable(enterAction);
         this.exitAction = Optional.ofNullable(exitAction);
 
@@ -93,6 +96,11 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     @Override
     public Optional<BiConsumer<C, D>> getInitialEnterAction() {
         return initialEnterAction;
+    }
+
+    @Override
+    public Optional<BiConsumer<C, D>> getSelfEnterAction() {
+        return selfEnterAction;
     }
 
     @Override
