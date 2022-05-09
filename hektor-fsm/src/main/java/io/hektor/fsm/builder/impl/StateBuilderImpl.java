@@ -81,7 +81,7 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
      * @return
      */
     @Override
-    public StateBuilderImpl<S, C, D> withEnterAction(final BiConsumer<C, D> action) {
+    public StateBuilderImpl<S, C, D> withEnterAction(final BiConsumer<C, D> action, final String label) {
         enterAction = action;
         return this;
     }
@@ -199,7 +199,8 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
 
         final List<Transition<?, S, C, D>> ts = transitions.stream().map(TransitionBuilder::build).collect(Collectors.toList());
         final Optional<Transition<Object, S, C, D>> defaultTs = Optional.ofNullable(defaultTransition == null ? null : defaultTransition.build());
-        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts, defaultTs, initialEnterAction, selfEnterAction, enterAction, exitAction);
+        return new StateImpl(state, isInitialState, isFinalState, isTransient, ts,
+                defaultTs, initialEnterAction, selfEnterAction, enterAction, exitAction);
     }
 
 

@@ -3,6 +3,7 @@ package io.hektor.fsm.builder;
 import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.State;
+import io.hektor.fsm.visitor.PlantUmlVisitor;
 
 import java.util.function.BiConsumer;
 
@@ -18,8 +19,15 @@ public interface StateBuilder<S extends Enum<S>, C extends Context, D extends Da
      *
      * If you wish to trigger an action on "self enter", then use {@link #withSelfEnterAction(BiConsumer)}.
      *
+     * @param action the action that will be executed
+     * @param label a human-readable label, which is ONLY meant for documentation purposes. E.g., {@link PlantUmlVisitor}
+     *              uses it when it generates state diagrams.
      */
-    StateBuilder<S, C, D> withEnterAction(final BiConsumer<C, D> action);
+    StateBuilder<S, C, D> withEnterAction(BiConsumer<C, D> action, String label);
+
+    default StateBuilder<S, C, D> withEnterAction(final BiConsumer<C, D> action) {
+        return withEnterAction(action, null);
+    }
 
     /**
      * Register an action that will be executed upon entering this state the very first time only.

@@ -1,5 +1,7 @@
 package io.hektor.fsm;
 
+import io.hektor.fsm.visitor.FsmVisitor;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -8,6 +10,8 @@ import java.util.function.BiConsumer;
  * @author jonas@jonasborjesson.com
  */
 public interface State<S extends Enum<S>, C extends Context, D extends Data> {
+
+    void acceptVisitor(FsmVisitor<S, C, D> visitor);
 
     /**
      * Retrieve the enum value of the state.
