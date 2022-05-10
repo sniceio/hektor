@@ -1,6 +1,5 @@
 package io.hektor.fsm;
 
-import io.hektor.fsm.builder.FSMBuilder;
 import io.hektor.fsm.builder.StateBuilder;
 import io.hektor.fsm.builder.exceptions.IllegalTransformationOnTransitionException;
 import io.hektor.fsm.builder.exceptions.StateBuilderException;
@@ -9,8 +8,6 @@ import io.hektor.fsm.builder.exceptions.TransientStateMissingTransitionException
 import io.hektor.fsm.builder.exceptions.TransitionMissingException;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,32 +29,14 @@ import static org.mockito.Mockito.verify;
  *
  * A transient state is one that you enter and exit in the same "firing".
  */
-public class TransientStateTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(TransientStateTest.class);
-
-    private FSM<SuperSimpleStates, Context, Data> fsm;
-    private FSMBuilder<SuperSimpleStates, Context, Data> builder;
-    private StateBuilder<SuperSimpleStates, Context, Data> a;
-    private StateBuilder<SuperSimpleStates, Context, Data> b;
-    private StateBuilder<SuperSimpleStates, Context, Data> c;
-    private StateBuilder<SuperSimpleStates, Context, Data> d;
-    private StateBuilder<SuperSimpleStates, Context, Data> e;
-    private StateBuilder<SuperSimpleStates, Context, Data> f;
-    private StateBuilder<SuperSimpleStates, Context, Data> g;
-    private StateBuilder<SuperSimpleStates, Context, Data> h;
+public class TransientStateTest extends TestBase {
 
     private CountDownLatch latch;
 
+    @Override
     @Before
     public void setUp() {
-        builder = FSM.of(SuperSimpleStates.class).ofContextType(Context.class).withDataType(Data.class);
-
-        // for simplicity sake, all our unit tests will have the initial state set as A and
-        // the final state as H.
-        a = builder.withInitialState(SuperSimpleStates.A);
-        h = builder.withFinalState(SuperSimpleStates.H);
-
+        super.setUp();
         latch = new CountDownLatch(1);
     }
 
@@ -67,7 +46,7 @@ public class TransientStateTest {
      * into that state will not cause this "initial enter action" to be executed.
      */
     @Test
-    public void testInitialEnterAction() throws Exception {
+    public void testInitialEnterAction() {
         final CountDownLatch initialEnterAction = mock(CountDownLatch.class);
         final CountDownLatch enterActionLatch = mock(CountDownLatch.class);
 
@@ -462,16 +441,6 @@ public class TransientStateTest {
         assertThat(fsm.isTerminated(), is(true));
     }
 
-    private void go(final Object event) {
-        fsm = build();
-        fsm.start();
-        fsm.onEvent(event);
-    }
-
-    private FSM<SuperSimpleStates, Context, Data> build() {
-        return builder.build().newInstance("uuid-123", mock(Context.class), mock(Data.class),
-                TransientStateTest::onUnhandledEvent, TransientStateTest::onTransition);
-    }
 
     private void ensureLatchesNotOpened(final CountDownLatch... latches) throws Exception {
         for (final CountDownLatch latch : latches) {
@@ -489,15 +458,4 @@ public class TransientStateTest {
         }
     }
 
-    private static void onUnhandledEvent(final SuperSimpleStates state, final Object event) {
-        fail("I did not expect a unhandled event");
-    }
-
-    private static void onTransition(final SuperSimpleStates from, final SuperSimpleStates to, final Object event) {
-        logger.info("{} -> {} Event: {}", from, to, event);
-    }
-
-    private enum SuperSimpleStates {
-        A, B, C, D, E, F, G, H;
-    }
 }

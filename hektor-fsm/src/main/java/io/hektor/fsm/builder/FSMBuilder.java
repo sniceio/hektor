@@ -108,7 +108,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
     }
 
     /**
-     * Check so that all transitions are actually valid. E.g,, need to
+     * Check so that all transitions are actually valid. E.g, need to
      * ensure that all transitions are going to states that
      * actually exists.
      * <p>

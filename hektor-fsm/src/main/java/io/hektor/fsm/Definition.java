@@ -1,5 +1,7 @@
 package io.hektor.fsm;
 
+import io.hektor.fsm.visitor.FsmVisitor;
+
 import java.util.function.BiConsumer;
 
 public interface Definition<S extends Enum<S>, C extends Context, D extends Data> {
@@ -30,4 +32,5 @@ public interface Definition<S extends Enum<S>, C extends Context, D extends Data
      */
     FSM newInstance(Object uuid, C context, D data);
 
+    void acceptVisitor(FsmVisitor<S, C, D> visitor);
 }

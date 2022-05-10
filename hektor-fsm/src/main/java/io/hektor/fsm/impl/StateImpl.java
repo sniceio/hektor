@@ -4,6 +4,7 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;
+import io.hektor.fsm.visitor.FsmVisitor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,6 +88,13 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
         return ts;
 
     };
+
+    @Override
+    public void acceptVisitor(final FsmVisitor<S, C, D> visitor) {
+        visitor.visit(this);
+        transitions.forEach(t -> visitor.visit(state, t));
+        defaultTransition.ifPresent(t -> visitor.visit(state, t));
+    }
 
     @Override
     public S getState() {

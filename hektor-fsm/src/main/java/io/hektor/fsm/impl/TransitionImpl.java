@@ -5,6 +5,7 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.Guard;
 import io.hektor.fsm.Transition;
+import io.hektor.fsm.visitor.FsmVisitor;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -89,7 +90,17 @@ public class TransitionImpl<E, S extends Enum<S>, C extends Context, D extends D
     }
 
     @Override
+    public Class<E> getEventType() {
+        return event;
+    }
+
+    @Override
     public Optional<Function<E, ?>> getTransformation() {
         return transformation;
+    }
+
+    @Override
+    public void acceptVisitor(final FsmVisitor<S, C, D> visitor) {
+        visitor.visit(null, this);
     }
 }

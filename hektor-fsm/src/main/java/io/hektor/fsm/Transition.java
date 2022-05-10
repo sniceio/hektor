@@ -1,5 +1,7 @@
 package io.hektor.fsm;
 
+import io.hektor.fsm.visitor.FsmVisitor;
+
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -42,6 +44,7 @@ public interface Transition<E, S extends Enum<S>, C extends Context, D extends D
 
     Optional<Action<E, C, D>> getStatefulAction();
 
+    Class<E> getEventType();
     /**
      * Get the transformation associated with this {@link Transition}. A transformation
      * may only exists if this is a transition out of a transient state.
@@ -50,4 +53,5 @@ public interface Transition<E, S extends Enum<S>, C extends Context, D extends D
      */
     Optional<Function<E, ?>> getTransformation();
 
+    void acceptVisitor(FsmVisitor<S, C, D> visitor);
 }
