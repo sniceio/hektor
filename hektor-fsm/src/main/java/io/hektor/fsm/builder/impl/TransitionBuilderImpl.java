@@ -8,8 +8,10 @@ import io.hektor.fsm.Transition;
 import io.hektor.fsm.builder.TransitionBuilder;
 import io.hektor.fsm.builder.exceptions.ActionAlreadyDefinedException;
 import io.hektor.fsm.builder.exceptions.GuardAlreadyDefinedException;
+import io.hektor.fsm.docs.Label;
 import io.hektor.fsm.impl.TransitionImpl;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -37,12 +39,19 @@ public class TransitionBuilderImpl<E extends Object, S extends Enum<S>, C extend
 
     private Predicate<E> guard;
     private Guard<E, C, D> richerGuard;
+    private Optional<Label> guardLabel = Optional.empty();
 
     /**
      * A "simple" action that only takes the event that was processed by the FSM and that triggered
      * this transition. Compare with the "stateful" action below.
      */
     private Consumer<E> action;
+
+    /**
+     * Optional label for the action. Note that the builder ensures that there is only one action and as such, we
+     * can use the same action label.
+     */
+    private Optional<Label> actionLabel = Optional.empty();
 
     /**
      * A so-called stateful action is an action that not only accept the event but also the {@link Context}
@@ -55,6 +64,7 @@ public class TransitionBuilderImpl<E extends Object, S extends Enum<S>, C extend
      * which then is the new value that will be given to the target state.
      */
     private Function<E, ?> transformation;
+    private Optional<Label> transformationLabel = Optional.empty();
 
     public TransitionBuilderImpl(final S toState, final Class<E> event) {
         this(toState, event, false, false);
@@ -71,45 +81,40 @@ public class TransitionBuilderImpl<E extends Object, S extends Enum<S>, C extend
         this.isTransient = isTransient;
     }
 
-    @Override public TransitionBuilder<E, S, C, D> withGuard(final Predicate<E> guard) {
+    @Override public TransitionBuilder<E, S, C, D> withGuard(final Predicate<E> guard, final Label label) {
         ensureGuardIsVisible();
         assertGuard();
         this.guard = guard;
+        this.guardLabel = Optional.ofNullable(label);
         return this;
     }
 
-    @Override public TransitionBuilder<E, S, C, D> withGuard(final Guard<E, C, D> guard) {
+    @Override public TransitionBuilder<E, S, C, D> withGuard(final Guard<E, C, D> guard, final Label label) {
         ensureGuardIsVisible();
         assertGuard();
         this.richerGuard = guard;
+        this.guardLabel = Optional.ofNullable(label);
         return this;
     }
 
-    /**
-     * An empty action will be installed that will just silently consume the event.
-     *
-     */
     @Override
-    public TransitionBuilder<E, S, C, D> consume() {
-        return withAction(e -> {});
-    }
-
-    @Override
-    public TransitionBuilder<E, S, C, D> withAction(final Consumer<E> action) {
+    public TransitionBuilder<E, S, C, D> withAction(final Consumer<E> action, final Label label) {
         assertAction();
         this.action = action;
+        this.actionLabel = Optional.ofNullable(label);
         return this;
     }
 
     @Override
-    public TransitionBuilder<E, S, C, D> withAction(final Action<E, C, D> action) {
+    public TransitionBuilder<E, S, C, D> withAction(final Action<E, C, D> action, final Label label) {
         assertAction();
         this.statefulAction = action;
+        this.actionLabel = Optional.ofNullable(label);
         return this;
     }
 
     @Override
-    public <R> TransitionBuilder<E, S, C, D> withTransformation(final Function<E, R> transformation) throws IllegalStateException {
+    public <R> TransitionBuilder<E, S, C, D> withTransformation(final Function<E, R> transformation, final Label label) throws IllegalStateException {
         ensureNotNull(transformation, "The transformation function cannot be null");
         if (this.transformation != null) {
             throw new IllegalStateException("A transformation has already been given, you cannot specify it twice.");
@@ -121,12 +126,13 @@ public class TransitionBuilderImpl<E extends Object, S extends Enum<S>, C extend
         // }
 
         this.transformation = transformation;
+        this.transformationLabel = Optional.ofNullable(label);
         return this;
     }
 
     @Override
     public Transition<E, S, C, D> build() {
-        return new TransitionImpl(null, toState, event, guard, richerGuard, action, statefulAction, transformation);
+        return new TransitionImpl(null, toState, event, guard, richerGuard, guardLabel, action, statefulAction, actionLabel, transformation, transformationLabel);
     }
 
     private void assertGuard() throws GuardAlreadyDefinedException {

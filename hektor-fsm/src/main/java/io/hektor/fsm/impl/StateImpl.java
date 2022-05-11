@@ -4,6 +4,7 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;
+import io.hektor.fsm.docs.Label;
 import io.hektor.fsm.visitor.FsmVisitor;
 
 import java.util.ArrayList;
@@ -25,10 +26,18 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     private final boolean isTransient;
     private final List<Transition<?, S, C, D>> transitions;
     private final Optional<Transition<?, S, C, D>> defaultTransition;
+
     private final Optional<BiConsumer<C, D>> initialEnterAction;
+    private final Optional<Label> initialEnterActionLabel;
+
     private final Optional<BiConsumer<C, D>> selfEnterAction;
+    private final Optional<Label> selfEnterActionLabel;
+
     private final Optional<BiConsumer<C, D>> enterAction;
+    private final Optional<Label> enterActionLabel;
+
     private final Optional<BiConsumer<C, D>> exitAction;
+    private final Optional<Label> exitActionLabel;
 
     private final List<S> connectedNodes = new ArrayList<>();
 
@@ -39,9 +48,13 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
                      final List<Transition<?, S, C, D>> transitions,
                      final Optional<Transition<?, S, C, D>> defaultTransition,
                      final BiConsumer<C, D> initialEnterAction,
+                     final Label initialEnterActionLabel,
                      final BiConsumer<C, D> selfEnterAction,
+                     final Label selfEnterActionLabel,
                      final BiConsumer<C, D> enterAction,
-                     final BiConsumer<C, D> exitAction) {
+                     final Label enterActionLabel,
+                     final BiConsumer<C, D> exitAction,
+                     final Label exitActionLabel) {
         this.state = state;
         this.isInitial = isInitial;
         this.isFinal = isFinal;
@@ -55,6 +68,10 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
 
         transitions.forEach(this::markConnectedNode);
         markConnectedNode(defaultTransition.orElse(null));
+        this.initialEnterActionLabel = Optional.ofNullable(initialEnterActionLabel);
+        this.selfEnterActionLabel = Optional.ofNullable(selfEnterActionLabel);
+        this.enterActionLabel = Optional.ofNullable(enterActionLabel);
+        this.exitActionLabel = Optional.ofNullable(exitActionLabel);
     }
 
     /**
@@ -107,8 +124,18 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     }
 
     @Override
+    public Optional<Label> getInitialEnterActionLabel() {
+        return initialEnterActionLabel;
+    }
+
+    @Override
     public Optional<BiConsumer<C, D>> getSelfEnterAction() {
         return selfEnterAction;
+    }
+
+    @Override
+    public Optional<Label> getSelfEnterActionLabel() {
+        return selfEnterActionLabel;
     }
 
     @Override
@@ -117,8 +144,18 @@ public class StateImpl<S extends Enum<S>, C extends Context, D extends Data> imp
     }
 
     @Override
+    public Optional<Label> getEnterActionLabel() {
+        return enterActionLabel;
+    }
+
+    @Override
     public Optional<BiConsumer<C, D>> getExitAction() {
         return exitAction;
+    }
+
+    @Override
+    public Optional<Label> getExitActionLabel() {
+        return exitActionLabel;
     }
 
     @Override

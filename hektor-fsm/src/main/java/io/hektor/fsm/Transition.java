@@ -1,5 +1,6 @@
 package io.hektor.fsm;
 
+import io.hektor.fsm.docs.Label;
 import io.hektor.fsm.visitor.FsmVisitor;
 
 import java.util.Optional;
@@ -37,12 +38,16 @@ public interface Transition<E, S extends Enum<S>, C extends Context, D extends D
      */
     S getToState();
 
+    Optional<Label> getGuardLabel();
+
     /**
      * Get the associated action wih this transition, if it exists.
      */
     Optional<Consumer<E>> getAction();
 
     Optional<Action<E, C, D>> getStatefulAction();
+
+    Optional<Label> getActionLabel();
 
     Class<E> getEventType();
     /**
@@ -52,6 +57,8 @@ public interface Transition<E, S extends Enum<S>, C extends Context, D extends D
      * @return the optional transformation for a {@link Transition} out of a transient state.
      */
     Optional<Function<E, ?>> getTransformation();
+
+    Optional<Label> getTransformationLabel();
 
     void acceptVisitor(FsmVisitor<S, C, D> visitor);
 }
