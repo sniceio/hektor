@@ -13,6 +13,7 @@ import io.hektor.fsm.builder.exceptions.FinalStateTransitionsException;
 import io.hektor.fsm.builder.exceptions.TransientLoopDetectedException;
 import io.hektor.fsm.builder.exceptions.TransientStateMissingTransitionException;
 import io.hektor.fsm.builder.exceptions.TransitionMissingException;
+import io.hektor.fsm.docs.Label;
 import io.hektor.fsm.impl.StateImpl;
 
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
      * never ever be executed again.
      */
     private BiConsumer<C, D> initialEnterAction;
+    private Label initialEnterActionLabel;
 
 
     /**
@@ -57,9 +59,13 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
      * to/from the very same state, such as from state B back to state B.
      */
     private BiConsumer<C, D> selfEnterAction;
+    private Label selfEnterActionLabel;
 
     private BiConsumer<C, D> enterAction;
+    private Label enterActionLabel;
+
     private BiConsumer<C, D> exitAction;
+    private Label exitActionLabel;
 
     public StateBuilderImpl(final S state) {
         this(state, false);
@@ -81,20 +87,23 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
      * @return
      */
     @Override
-    public StateBuilderImpl<S, C, D> withEnterAction(final BiConsumer<C, D> action, final String label) {
+    public StateBuilderImpl<S, C, D> withEnterAction(final BiConsumer<C, D> action, final Label label) {
         enterAction = action;
+        enterActionLabel = label;
         return this;
     }
 
     @Override
-    public StateBuilderImpl<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action) {
+    public StateBuilderImpl<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action, final Label label) {
         initialEnterAction = action;
+        initialEnterActionLabel = label;
         return this;
     }
 
     @Override
-    public StateBuilderImpl<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action) {
+    public StateBuilderImpl<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action, final Label label) {
         selfEnterAction = action;
+        selfEnterActionLabel = label;
         return this;
     }
 
@@ -104,8 +113,9 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
      * @return
      */
     @Override
-    public StateBuilderImpl<S, C, D> withExitAction(final BiConsumer<C, D> action) {
+    public StateBuilderImpl<S, C, D> withExitAction(final BiConsumer<C, D> action, final Label label) {
         exitAction = action;
+        exitActionLabel = label;
         return this;
     }
 
@@ -200,9 +210,8 @@ public class StateBuilderImpl<S extends Enum<S>, C extends Context, D extends Da
         final List<Transition<?, S, C, D>> ts = transitions.stream().map(TransitionBuilder::build).collect(Collectors.toList());
         final Optional<Transition<Object, S, C, D>> defaultTs = Optional.ofNullable(defaultTransition == null ? null : defaultTransition.build());
         return new StateImpl(state, isInitialState, isFinalState, isTransient, ts,
-                defaultTs, initialEnterAction, selfEnterAction, enterAction, exitAction);
+                defaultTs, initialEnterAction, initialEnterActionLabel, selfEnterAction, selfEnterActionLabel, enterAction, enterActionLabel, exitAction, exitActionLabel);
     }
-
 
     public StateBuilderImpl<S, C, D> isInital(final boolean value) {
         isInitialState = value;

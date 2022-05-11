@@ -3,6 +3,7 @@ package io.hektor.fsm.builder;
 import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.State;
+import io.hektor.fsm.docs.Label;
 import io.hektor.fsm.visitor.PlantUmlVisitor;
 
 import java.util.function.BiConsumer;
@@ -23,7 +24,7 @@ public interface StateBuilder<S extends Enum<S>, C extends Context, D extends Da
      * @param label a human-readable label, which is ONLY meant for documentation purposes. E.g., {@link PlantUmlVisitor}
      *              uses it when it generates state diagrams.
      */
-    StateBuilder<S, C, D> withEnterAction(BiConsumer<C, D> action, String label);
+    StateBuilder<S, C, D> withEnterAction(BiConsumer<C, D> action, Label label);
 
     default StateBuilder<S, C, D> withEnterAction(final BiConsumer<C, D> action) {
         return withEnterAction(action, null);
@@ -55,7 +56,11 @@ public interface StateBuilder<S extends Enum<S>, C extends Context, D extends Da
      * @param action
      * @return
      */
-    StateBuilder<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action);
+    StateBuilder<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action, final Label label);
+
+    default StateBuilder<S, C, D> withInitialEnterAction(final BiConsumer<C, D> action) {
+        return withInitialEnterAction(action, null);
+    }
 
     /**
      * Register an action that will trigger when you transition to/from the same state.
@@ -64,12 +69,20 @@ public interface StateBuilder<S extends Enum<S>, C extends Context, D extends Da
      * @param action
      * @return
      */
-    StateBuilder<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action);
+    StateBuilder<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action, Label label);
+
+    default StateBuilder<S, C, D> withSelfEnterAction(final BiConsumer<C, D> action) {
+        return withSelfEnterAction(action, null);
+    }
 
     /**
      * Register an action that will be executed upon exiting this state.
      */
-    StateBuilder<S, C, D> withExitAction(final BiConsumer<C, D> action);
+    StateBuilder<S, C, D> withExitAction(final BiConsumer<C, D> action, Label label);
+
+    default StateBuilder<S, C, D> withExitAction(final BiConsumer<C, D> action) {
+        return withExitAction(action, null);
+    }
 
     /**
      * Set the maximum time we allow to stay in this state. When this duration
