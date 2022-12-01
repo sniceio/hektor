@@ -15,7 +15,7 @@
     <name>Hektor IO</name>
     <groupId>io.hektor</groupId>
     <artifactId>hektor-parent</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.5</version>
     <packaging>pom</packaging>
     <description>Hektor - Not your avarage Actor</description>
 
@@ -39,7 +39,7 @@
         <connection>scm:git:git@github.com:sniceio/hektor.git</connection>
         <developerConnection>scm:git:git@github.com:sniceio/hektor.git</developerConnection>
 	<url>git@github.com:sniceio/hektor.git</url>
-        <tag>HEAD</tag>
+        <tag>hektor-release-0.0.5</tag>
     </scm>
 
     <properties>
