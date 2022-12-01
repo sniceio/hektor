@@ -44,7 +44,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <snice-commons.version>0.1.10-SNAPSHOT</snice-commons.version>
+        <snice-commons.version>0.1.10</snice-commons.version>
         <sl4j.version>1.7.25</sl4j.version>
         <logback.version>1.2.3</logback.version>
         <mockito.version>1.9.5</mockito.version>
