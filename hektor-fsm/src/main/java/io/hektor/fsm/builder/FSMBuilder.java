@@ -23,9 +23,15 @@ import java.util.Arrays;
 public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
 
     private final StateBuilderImpl<S, C, D>[] states;
+    private String friendlyName;
 
     public FSMBuilder(final S[] possibleStates) {
         states = new StateBuilderImpl[possibleStates.length];
+    }
+
+    public FSMBuilder<S, C, D> withFriendlyName(final String name) {
+        friendlyName = name;
+        return this;
     }
 
     public StateBuilder<S, C, D> withInitialState(final S state) {
@@ -104,7 +110,7 @@ public class FSMBuilder<S extends Enum<S>, C extends Context, D extends Data> {
         }
 
         checkTransitions(states);
-        return new DefinitionImpl(states);
+        return new DefinitionImpl(friendlyName, states);
     }
 
     /**

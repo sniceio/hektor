@@ -44,12 +44,14 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <snice-commons.version>0.1.10</snice-commons.version>
-        <sl4j.version>1.7.25</sl4j.version>
-        <logback.version>1.2.3</logback.version>
-        <mockito.version>1.9.5</mockito.version>
+        <snice-commons.version>0.1.11-SNAPSHOT</snice-commons.version>
+        <sl4j.version>2.0.5</sl4j.version>
+        <logback.version>1.4.5</logback.version>
+        <mockito.version>4.1.0</mockito.version>
+        <hamcrest.version>2.2</hamcrest.version>
         <junit.version>4.13.1</junit.version>
         <jackson.version>2.14.1</jackson.version>
+        <logstash.version>7.2</logstash.version>
         <metrics.version>3.1.0</metrics.version>
         <netty.version>4.1.72.Final</netty.version>
     </properties>
@@ -102,6 +104,13 @@
 
             <dependency>
                 <groupId>io.snice</groupId>
+                <artifactId>snice-logging</artifactId>
+                <version>${snice-commons.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.snice</groupId>
                 <artifactId>snice-buffers</artifactId>
                 <version>${snice-commons.version}</version>
                 <scope>compile</scope>
@@ -120,6 +129,7 @@
                 <version>${logback.version}</version>
                 <scope>runtime</scope>
             </dependency>
+
 
             <!-- For meassuring everything -->
             <dependency>
@@ -175,10 +185,23 @@
             </dependency>
 
             <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest</artifactId>
+                <version>${hamcrest.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.mockito</groupId>
-                <artifactId>mockito-all</artifactId>
+                <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
-                <type>jar</type>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>${logstash.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -190,9 +213,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
                 <configuration>
-                    <release>11</release>
+                    <release>17</release>
                 </configuration>
             </plugin>
 

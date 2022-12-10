@@ -1,4 +1,4 @@
-package io.hektor.actors.fsm;
+package io.hektor.fsm;
 
 import io.snice.logging.Alert;
 
@@ -8,18 +8,11 @@ import io.snice.logging.Alert;
 public enum FsmAlertCode implements Alert {
 
     /**
-     * If the {@link io.hektor.fsm.FSM} receives an event for which there
-     * is not defined transition, we will log the following warning. Any event that is "unhandled"
+     * If the {@link FSM} receives an event for which there
+     * is not defined transition, we will log a warning. Any event that is "unhandled"
      * is a bug and should be addressed asap.
      *
-     * The arguments to the formatting string below are:
-     * <ol>
-     *     <li>FSM State</li>
-     *     <li>Class name of the event</li>
-     *     <li>Event as a formatted string</li>
-     * </ol>
      */
-    // UNHANDLED_FSM_EVENT(1000, "{} Unhandled event of type {}. Formatted output {}");
     UNHANDLED_FSM_EVENT(1000, "Unhandled event");
 
     private final int code;

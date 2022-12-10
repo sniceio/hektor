@@ -1,6 +1,7 @@
 package io.hektor.fsm.scenarios.vendingmachine;
 
 import io.hektor.fsm.FSM;
+import io.hektor.fsm.TestBase;
 import io.hektor.fsm.TransitionListener;
 import io.hektor.fsm.scenarios.vendingmachine.VendingMachineFSM.VendingState;
 import io.hektor.fsm.scenarios.vendingmachine.events.CancelEvent;
@@ -19,15 +20,17 @@ import static org.mockito.Mockito.verify;
  * Unit test and also serves as an example for how to actually
  * test Hektor FSMs.
  */
-public class VendingMachineTest {
+public class VendingMachineTest extends TestBase {
 
     private FSM vendingMachine;
     private VendingContext ctx;
     private VendingData data;
     private final CoinReturn coinReturn = Mockito.mock(CoinReturn.class);
 
+    @Override
     @Before
     public void setUp() {
+        super.setUp();
         ctx = new VendingContext(coinReturn);
         data = new VendingData();
         vendingMachine = VendingMachineFSM.definition.newInstance("some-uuid-123", ctx, data);

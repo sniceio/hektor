@@ -66,6 +66,8 @@ public class VendingMachineFSM {
         final FSMBuilder<VendingState, VendingContext, VendingData> builder =
                 FSM.of(VendingState.class).ofContextType(VendingContext.class).withDataType(VendingData.class);
 
+        builder.withFriendlyName("vending_machine");
+
         // 2. Define all the states:
         final StateBuilder<VendingState, VendingContext, VendingData> idle = builder.withInitialState(IDLE);
         final StateBuilder<VendingState, VendingContext, VendingData> insertingCoins = builder.withState(INSERTING_COINS);

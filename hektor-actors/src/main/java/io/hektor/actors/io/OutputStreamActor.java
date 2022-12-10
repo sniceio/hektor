@@ -133,8 +133,4 @@ public class OutputStreamActor extends SubscriptionManagementSupport implements 
         return logger;
     }
 
-    @Override
-    public Object getUUID() {
-        return self();
-    }
 }

@@ -138,11 +138,6 @@ public class InputStreamActor extends SubscriptionManagementSupport implements R
         return logger;
     }
 
-    @Override
-    public Object getUUID() {
-        return self();
-    }
-
     private static final class EndOfStream {
         private static final EndOfStream EOF = new EndOfStream();
     }
