@@ -1,7 +1,16 @@
 package io.hektor.fsm;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import io.hektor.fsm.builder.FSMBuilder;
 import io.hektor.fsm.builder.StateBuilder;
+import net.logstash.logback.composite.loggingevent.LogLevelJsonProvider;
+import net.logstash.logback.composite.loggingevent.LoggingEventJsonProviders;
+import net.logstash.logback.composite.loggingevent.MdcJsonProvider;
+import net.logstash.logback.composite.loggingevent.MessageJsonProvider;
+import net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +35,12 @@ public class TestBase {
 
     @Before
     public void setUp() {
+        final var ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final var root = ctx.getLogger(Logger.ROOT_LOGGER_NAME);
+        root.setLevel(Level.INFO);
+        root.detachAndStopAllAppenders();
+        configureJsonAppender(ctx, root);
+
         builder = FSM.of(SuperSimpleStates.class).ofContextType(Context.class).withDataType(Data.class);
 
         // for simplicity sake, all our unit tests will have the initial state set as A and
@@ -33,6 +48,28 @@ public class TestBase {
         a = builder.withInitialState(SuperSimpleStates.A);
         h = builder.withFinalState(SuperSimpleStates.H);
 
+    }
+
+    /**
+     * Helper method to setup json logging. Not actually used for testing but just nice if you also want to
+     * view the full mdc etc while figuring out a particular test.
+     */
+    private static void configureJsonAppender(final LoggerContext ctx, final ch.qos.logback.classic.Logger root) {
+        final var appender = new ConsoleAppender<ILoggingEvent>();
+        appender.setContext(ctx);
+
+        final var encoder = new LoggingEventCompositeJsonEncoder();
+        encoder.setContext(ctx);
+        final var provider = new LoggingEventJsonProviders();
+        provider.addLogLevel(new LogLevelJsonProvider());
+        provider.addMessage(new MessageJsonProvider());
+        provider.addMdc(new MdcJsonProvider());
+        encoder.setProviders(provider);
+        encoder.start();
+        appender.setEncoder(encoder);
+
+        appender.start();
+        root.addAppender(appender);
     }
 
     public enum SuperSimpleStates {
@@ -55,7 +92,6 @@ public class TestBase {
     }
 
     private static void onTransition(final SuperSimpleStates from, final SuperSimpleStates to, final Object event) {
-        logger.info("{} -> {} Event: {}", from, to, event);
     }
 
 

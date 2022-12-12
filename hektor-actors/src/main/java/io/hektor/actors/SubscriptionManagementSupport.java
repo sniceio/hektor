@@ -3,6 +3,7 @@ package io.hektor.actors;
 import io.hektor.actors.events.subscription.SubscriptionManagementEvent;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
+import io.snice.logging.Logging;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -12,7 +13,7 @@ import java.util.Set;
  * Helper base class for those {@link Actor}s that does support subscription type of
  * capabilities.
  */
-public abstract class SubscriptionManagementSupport implements Actor, LoggingSupport {
+public abstract class SubscriptionManagementSupport implements Actor, Logging {
 
     private final Set<ActorRef> subscribers = new HashSet<>();
 

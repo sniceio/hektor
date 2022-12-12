@@ -6,17 +6,24 @@ import io.hektor.fsm.FSM;
 import io.hektor.fsm.State;
 import io.hektor.fsm.Transition;
 import io.hektor.fsm.TransitionListener;
+import io.snice.logging.Logging;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static io.hektor.fsm.FsmAlertCode.UNHANDLED_FSM_EVENT;
 import static io.snice.preconditions.PreConditions.ensureNotNull;
 
 /**
  * @author jonas@jonasborjesson.com
  */
-public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> implements FSM<S, C, D> {
+public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> implements FSM<S, C, D>, Logging {
+
+    private static final Logger logger = LoggerFactory.getLogger(FsmImpl.class);
+
     private final Object uuid;
     private final BiConsumer<S, Object> unhandledEventHandler;
     private final TransitionListener<S> transitionListener;
@@ -28,7 +35,27 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
 
     private State currentState;
 
+    /**
+     * Our log context where this instance is really just used as the initial template that has the
+     * FSM friendly name and the UUID. Just so we don't have to keep passing these two parameters in
+     * since they won't ever change.
+     */
+    private final FsmLogContext logCtx;
+
+    /**
+     *
+     * @param uuid unique id to use as a correlator by external users. Not used by the FSM itself, other than
+     *             in logging etc.
+     * @param friendlyName only used for logging.
+     * @param states
+     * @param initialState
+     * @param ctx
+     * @param data
+     * @param unhandledEventHandler
+     * @param transitionListener
+     */
     public FsmImpl(final Object uuid,
+                   final String friendlyName,
                    final State[] states,
                    final S initialState,
                    final C ctx,
@@ -48,6 +75,8 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
         // should execute the initial enter action, which is only done the
         // very first time you enter a state.
         hasEnteredState = new boolean[states.length];
+
+        logCtx = new FsmLogContext(friendlyName, uuid);
     }
 
     @Override
@@ -110,6 +139,7 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
             }
 
         } else {
+            logWarn(UNHANDLED_FSM_EVENT, logCtx.unhandledEvent(currentState.getState(), event));
             if (unhandledEventHandler != null) {
                 unhandledEventHandler.accept((S) currentState.getState(), event);
             }
@@ -134,8 +164,10 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
      */
     private void transition(final Transition<Object, S, C, D> transition, final Object event) {
         try {
+            final S fromState = (S) currentState.getState();
             final S toState = transition.getToState();
-            invokeTransitionListener((S) currentState.getState(), toState, event);
+            logInfo(logCtx.transition(fromState, toState, event), "Transitioning");
+            invokeTransitionListener(fromState, toState, event);
 
             // Note: our builders will ensure that there is only one action
             //       associated with our transition.
@@ -173,5 +205,10 @@ public class FsmImpl<S extends Enum<S>, C extends Context, D extends Data> imple
     @Override
     public final S getState() {
         return (S)currentState.getState();
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 }

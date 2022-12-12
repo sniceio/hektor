@@ -99,8 +99,4 @@ public class ConsoleActor extends SubscriptionManagementSupport implements Actor
         return logger;
     }
 
-    @Override
-    public Object getUUID() {
-        return self;
-    }
 }

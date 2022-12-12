@@ -12,7 +12,7 @@ public interface Definition<S extends Enum<S>, C extends Context, D extends Data
      * UUID other but may be important for the applications who actually are using
      * this FSM.
      *
-     * Also pass in a handler for any events that doesn't match the FSM. This allow you
+     * Also pass in a handler for any events that doesn't match the FSM. This allows you
      * to take action if there are any events that has been missed when creating the
      * FSM. A common best practice is to at the very least log on WARN so your systems
      * can alert you to the fact that your FSM is missing a transition.

@@ -1,6 +1,5 @@
 package io.hektor.actors.fsm;
 
-import io.hektor.actors.LoggingSupport;
 import io.hektor.actors.SubscriptionManagementSupport;
 import io.hektor.core.ActorContext;
 import io.hektor.core.ActorPath;
@@ -12,6 +11,7 @@ import io.hektor.fsm.Context;
 import io.hektor.fsm.Data;
 import io.hektor.fsm.Definition;
 import io.hektor.fsm.FSM;
+import io.snice.logging.Logging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ import static io.snice.preconditions.PreConditions.ensureNotNull;
  * execution environment for your FSM, default handling of logging etc.
  *
  */
-public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data> extends SubscriptionManagementSupport implements TransactionalActor, LoggingSupport {
+public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data> extends SubscriptionManagementSupport implements TransactionalActor, Logging {
 
     private static final Logger logger = LoggerFactory.getLogger(FsmActor.class);
 
@@ -48,6 +48,9 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
 
     private final OnStartFunction<C, D> onStart;
     private final OnStopFunction<C, D> onStop;
+
+    private io.snice.logging.Context logCtx;
+
 
 
     public static <S extends Enum<S>, C extends Context, D extends Data> Builder<S, C, D> of(final Definition<S, C, D> definition) {
@@ -72,27 +75,28 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
     public void start() {
         myPath = ctx().self().path();
 
-        logInfo("Starting");
+        logCtx = visitor -> visitor.accept("actor", myPath.name());
+
+        logInfo(logCtx, "Starting");
         // TODO: if these throw exception, we need to deal with and kill the actor.
         context = contextSupplier.apply(self());
         data = dataSupplier.get();
         onStart.start(ctx(), context, data);
 
-        fsm = definition.newInstance(getUUID(), context, data, this::unhandledEvent, this::onTransition);
+        fsm = definition.newInstance(myPath, context, data, this::unhandledEvent, null);
 
         invokeFsm((ignore) -> fsm.start(), null);
-
     }
 
     @Override
     public void stop() {
-        logInfo("Stopping");
+        logInfo(logCtx, "Stopping");
         onStop.stop(ctx(), context, data);
     }
 
     @Override
     public void postStop() {
-        logInfo("Stopped");
+        logInfo(logCtx, "Stopped");
     }
 
     @Override
@@ -101,11 +105,7 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
     }
 
     public void unhandledEvent(final S state, final Object o) {
-        logWarn(FsmAlertCode.UNHANDLED_FSM_EVENT, state, o.getClass().getName(), String.format("\"%s\"",format(o)));
-    }
-
-    public void onTransition(final S currentState, final S toState, final Object event) {
-        logInfo("{} -> {} Event: {}", currentState, toState, format(event));
+        // left empty intentionally. The FSM will alert on warning. Nothing we can do here.
     }
 
     private void invokeFsm(final Consumer<Object> exec, final Object msg) {
@@ -126,24 +126,9 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
         }
     }
 
-    /**
-     * TODO: perhaps we should allow the user to pass in their own formatting logic.
-     *
-     * @param object
-     * @return
-     */
-    private static final String format(final Object object) {
-        return object.toString();
-    }
-
     @Override
     public Logger getLogger() {
         return logger;
-    }
-
-    @Override
-    public Object getUUID() {
-        return myPath;
     }
 
     public static class Builder<S extends Enum<S>, C extends Context, D extends Data> {
@@ -180,13 +165,13 @@ public final class FsmActor<S extends Enum<S>, C extends Context, D extends Data
 
 
         public Builder withData(final D data) {
-            assertNotNull(context, "The data cannot be null");
+            assertNotNull(data, "The data cannot be null");
             this.data = () -> data;
             return this;
         }
 
         public Builder withData(final Supplier<D> data) {
-            assertNotNull(context, "The data supplier cannot be null");
+            assertNotNull(data, "The data supplier cannot be null");
             this.data = data;
             return this;
         }

@@ -1,12 +1,12 @@
 package io.hektor.actors.io;
 
-import io.hektor.actors.LoggingSupport;
 import io.hektor.core.Actor;
 import io.hektor.core.ActorContext;
 import io.hektor.core.ActorRef;
 import io.hektor.core.LifecycleEvent;
 import io.hektor.core.Props;
 import io.snice.buffer.Buffer;
+import io.snice.logging.Logging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * @author jonas@jonasborjesson.com
  */
-public class TokenReceiverActor implements LoggingSupport, Actor {
+public class TokenReceiverActor implements Logging, Actor {
 
     private final Logger logger = LoggerFactory.getLogger(TokenReceiverActor.class);
 
@@ -66,8 +66,4 @@ public class TokenReceiverActor implements LoggingSupport, Actor {
         return logger;
     }
 
-    @Override
-    public Object getUUID() {
-        return self();
-    }
 }

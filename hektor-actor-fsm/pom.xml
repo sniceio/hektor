@@ -23,6 +23,11 @@
         </dependency>
 
         <dependency>
+            <groupId>io.snice</groupId>
+            <artifactId>snice-logging</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.hektor</groupId>
             <artifactId>hektor-actors</artifactId>
         </dependency>
@@ -44,8 +49,19 @@
         </dependency>
 
         <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

@@ -3,6 +3,7 @@ package io.hektor.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.hektor.config.HektorConfiguration;
+import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 
 import java.io.IOException;
@@ -10,13 +11,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
 
 /**
  * Basic tests to configure and start Hektor and send some basic messages through.
@@ -35,7 +31,7 @@ public class HektorTestBase {
     protected Hektor initHektor(final String configResourceName) throws IOException {
         final HektorConfiguration config = loadConfig(configResourceName);
         final Hektor hektor = Hektor.withName("hello").withConfiguration(config).build();
-        assertThat(hektor, not((Hektor) null));
+        MatcherAssert.assertThat(hektor, not((Hektor) null));
         return hektor;
     }
 
