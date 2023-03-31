@@ -1,0 +1,13 @@
+name: Build
+
+on:
+  push:
+    branches-ignore: 
+      - "main"
+
+jobs:
+  build:
+    uses: sniceio/snice-github-workflows/.github/workflows/build_and_test.yml@main
+    with:
+      jdk_version: 17
+    secrets: inherit

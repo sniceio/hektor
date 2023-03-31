@@ -37,14 +37,14 @@
 
     <scm>
         <connection>scm:git:git@github.com:sniceio/hektor.git</connection>
-        <developerConnection>scm:git:git@github.com:sniceio/hektor.git</developerConnection>
+	<developerConnection>scm:git:https://github.com/sniceio/hektor.git</developerConnection>
 	<url>git@github.com:sniceio/hektor.git</url>
         <tag>HEAD</tag>
     </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <snice-commons.version>0.1.11-SNAPSHOT</snice-commons.version>
+        <snice-commons.version>0.1.11</snice-commons.version>
         <sl4j.version>2.0.5</sl4j.version>
         <logback.version>1.4.5</logback.version>
         <mockito.version>4.1.0</mockito.version>
@@ -63,6 +63,42 @@
         <module>hektor-actor-fsm</module>
         <module>hektor-micro-benchmark</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <stagingProgressTimeoutMinutes>10</stagingProgressTimeoutMinutes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
@@ -253,7 +289,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.0.0</version>
                 <configuration>
                     <tagNameFormat>hektor-release-@{project.version}</tagNameFormat>
                 </configuration>
