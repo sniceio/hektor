@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -103,6 +104,11 @@ public class DefaultDispatcher2 implements InternalDispatcher {
     @Override
     public void unregister(final ActorRef ref) {
         actorStore.remove(ref);
+    }
+
+    @Override
+    public CompletionStage<Void> shutdown() {
+        throw new RuntimeException("Not yet implemented - no one should be using this dispatcher");
     }
 
     @Override
