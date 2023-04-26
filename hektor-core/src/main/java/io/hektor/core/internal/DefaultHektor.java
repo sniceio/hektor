@@ -124,8 +124,7 @@ public final class DefaultHektor implements InternalHektor {
 
     @Override
     public CompletionStage<Void> terminate() {
-        final CompletableFuture<Void> future = new CompletableFuture<>();
-        return future;
+        return defaultDispatcher.shutdown();
     }
 
     /**

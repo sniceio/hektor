@@ -4,6 +4,8 @@ import io.hektor.core.Actor;
 import io.hektor.core.ActorRef;
 import io.hektor.core.Dispatcher;
 
+import java.util.concurrent.CompletionStage;
+
 /**
  * An internal extension to the Dispatcher
  *
@@ -19,4 +21,6 @@ public interface InternalDispatcher extends Dispatcher {
     void register(ActorRef ref, Actor actor);
 
     void unregister(ActorRef ref);
+
+    CompletionStage<Void> shutdown();
 }

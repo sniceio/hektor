@@ -11,15 +11,19 @@ import io.hektor.core.internal.ActorStore;
 import io.hektor.core.internal.InternalDispatcher;
 import io.hektor.core.internal.InternalHektor;
 import io.hektor.core.internal.InvokeActorTask;
-import io.snice.preconditions.PreConditions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static io.snice.preconditions.PreConditions.assertNotNull;
 
@@ -49,6 +53,8 @@ public class DefaultDispatcher implements InternalDispatcher {
     private final ActorStore actorStore;
     private final MetricRegistry metricRegistry;
     private final InternalHektor hektor;
+
+    private final CompletableFuture<Void> shutdownFuture = new CompletableFuture<>();
 
     /**
      * A metric timer for keeping track of the time a task stays in the
@@ -108,6 +114,24 @@ public class DefaultDispatcher implements InternalDispatcher {
     }
 
     @Override
+    public CompletionStage<Void> shutdown() {
+        final CompletableFuture<Worker>[] workerFutures = new CompletableFuture[noOfWorkers];
+        for (int i = 0; i < noOfWorkers; ++i) {
+            workerFutures[i] = workers[i].shutdown().toCompletableFuture();
+        }
+
+        return CompletableFuture.allOf(workerFutures)
+                .thenAccept(Void -> {
+                    executorService.shutdown();
+                })
+                .exceptionally(error -> {
+                    error.printStackTrace();
+                    executorService.shutdownNow();
+                    return null;
+                });
+    }
+
+    @Override
     public void dispatch(final ActorRef sender, final ActorRef receiver, final Object msg) {
         if (msg == null) {
             return;
@@ -152,6 +176,10 @@ public class DefaultDispatcher implements InternalDispatcher {
          */
         private final Timer jobTimer;
 
+        private final AtomicBoolean isDone = new AtomicBoolean(false);
+
+        private final CompletableFuture<Worker> shutdownFuture = new CompletableFuture<>();
+
         /**
          *
          */
@@ -162,15 +190,23 @@ public class DefaultDispatcher implements InternalDispatcher {
             this.jobTimer = jobtimer;
         }
 
+        public CompletionStage<Worker> shutdown() {
+            isDone.set(true);
+            return shutdownFuture;
+        }
+
         @Override
         public void run() {
             final int drain = 5;
             final List<Runnable> jobs = new ArrayList<>(drain);
-            while (true) {
+            while (!isDone.get()) {
                 Timer.Context timerContext = null;
                 try {
                     // use take as
-                    final Runnable event = queue.take();
+                    final Runnable event = queue.poll(500, TimeUnit.MILLISECONDS);
+                    if (event == null) {
+                        continue;
+                    }
 
                     timerContext = jobTimer.time();
                     event.run();
@@ -190,6 +226,8 @@ public class DefaultDispatcher implements InternalDispatcher {
                     }
                 }
             }
+
+            shutdownFuture.complete(this);
         }
 
     }

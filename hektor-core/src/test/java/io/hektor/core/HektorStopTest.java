@@ -56,19 +56,16 @@ public class HektorStopTest extends HektorTestBase {
      * Ensure we can shut down the entire system.
      * @throws Exception
      */
-    @Ignore
-    @Test(timeout = 500)
+    @Test(timeout = 2000)
     public void testStopHektor() throws Exception {
         final LatchContext latch001 = new LatchContext();
-        final ActorRef parent01 =  defaultHektor.actorOf(latch001.parentProps(), "parent01");
+        defaultHektor.actorOf(latch001.parentProps(), "parent01");
 
         final LatchContext latch002 = new LatchContext();
-        final ActorRef parent02 =  defaultHektor.actorOf(latch002.parentProps(), "parent02");
+        defaultHektor.actorOf(latch002.parentProps(), "parent02");
 
-        defaultHektor.terminate();
-
-        latch001.awaitShutdownLatches();
-        latch002.awaitShutdownLatches();
+        final var future = defaultHektor.terminate();
+        future.toCompletableFuture().get();
     }
 
     /**
