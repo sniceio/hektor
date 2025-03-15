@@ -46,7 +46,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <snice-commons.version>0.1.11</snice-commons.version>
         <sl4j.version>2.0.5</sl4j.version>
-        <logback.version>1.4.5</logback.version>
+        <logback.version>1.4.12</logback.version>
         <mockito.version>4.1.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
         <junit.version>4.13.1</junit.version>
