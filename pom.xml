@@ -53,7 +53,7 @@
         <jackson.version>2.14.1</jackson.version>
         <logstash.version>7.2</logstash.version>
         <metrics.version>3.1.0</metrics.version>
-        <netty.version>4.1.86.Final</netty.version>
+        <netty.version>4.1.118.Final</netty.version>
     </properties>
 
     <modules>
